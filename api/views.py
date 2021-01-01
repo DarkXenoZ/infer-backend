@@ -6,7 +6,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from .serializers import *
 
-from .stt import sample_recognize
 # Create your views here.
 from django.http import HttpResponse
 
@@ -30,3 +29,6 @@ err_not_allowed = Response(
 
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
+
+def index(request):
+    return HttpResponse("Hello, world. You're at the polls index.")
