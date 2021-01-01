@@ -10,7 +10,7 @@ CC-BE is a backend server stack for the courtcatch project using Django REST Fra
 
 ## Usage
 
-	cd into root cc-be directory
+	cd into root directory
 	$ python3 manage.py runserver
 	// Run once then migrate to init the db
 	$ python3 manage.py migrate
