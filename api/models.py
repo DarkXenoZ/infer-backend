@@ -3,8 +3,42 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, \
     MinValueValidator, MaxValueValidator
 
+# Class desease
+class Diag(models.Model):
+    name = models.CharField(max_length=100)
+# Class project
+class Project(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=400)
+    users = models.ManyToManyField(
+        User,
+        related_name='users',
+        blank=True,)
 
-    
+class ExtendedUser(models.Model):
+    is_verified = models.BooleanField(default=False)
+    base_user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='extended',
+    )
+    ban_list = models.ManyToManyField(
+        User,
+        related_name='banned',
+        blank=True,
+    )
+    project_list = models.ManyToManyField(
+        Project,
+        related_name='projects',
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.base_user.username
+
+    class Meta:
+        unique_together = ('base_user',)
+
 class Dicom(models.Model):
     name = models.CharField(max_length=200)
     data = models.FileField()
