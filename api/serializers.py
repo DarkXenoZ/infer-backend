@@ -38,3 +38,10 @@ class UserLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'logs',)
+
+class UserProjectSerializer(serializers.ModelSerializer):
+    projects = ProjectSerializer(many=True)
+
+    class Meta:
+        model = User
+        fields = ('username','projects')

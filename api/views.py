@@ -115,7 +115,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return err_no_permission
         queryset = User.objects.all()
         try:
-            user = queryset.get(username=pk).extended
+            user = queryset.get(username=pk)
             serializer_class = UserSerializer
             return Response(
                 serializer_class(user, many=False).data,
@@ -144,7 +144,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     'message': 'Password has been set',
-                    'result': serializer_class(user.extended, many=False).data
+                    'result': serializer_class(user, many=False).data
                 },
                 status=status.HTTP_200_OK,
             )
@@ -153,15 +153,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
     @action(methods=['GET'], detail=True)
-    def dicom(self, request, pk=None):
+    def projects(self, request, pk=None):
         user = User.objects.get(username=pk)
-
-        court = Dicom.objects.filter(owner=user)
-        serializer_class = DicomSerializer
+        project_list = user.projects
+        serializer_class = ProjectSerializer
         if len(court) == 0:
             return err_not_found
         return Response(
-            serializer_class(court, many=True).data,
+            serializer_class(project_list, many=True).data,
             status=status.HTTP_200_OK,
         )
 

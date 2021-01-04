@@ -6,6 +6,7 @@ from django.core.validators import RegexValidator, \
 # Class disease
 class Diag(models.Model):
     name = models.CharField(max_length=100)
+    
 # Class project
 class Project(models.Model):
     name = models.CharField(max_length=100)
