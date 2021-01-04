@@ -200,7 +200,7 @@ class DicomViewSet(viewsets.ModelViewSet):
     queryset = Dicom.objects.all()
     serializer_class = DicomSerializer
 
-   def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None):
         try:
             dicom = Dicom.objects.get(name=pk)
         except:
@@ -209,4 +209,68 @@ class DicomViewSet(viewsets.ModelViewSet):
         serializer_class = DicomSerializer
         return Response(serializer_class(dicom, many=False).data,
                         status=status.HTTP_200_OK, )
+    
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+
+        serializer_class = ProjectSerializer
+        return Response(serializer_class(project, many=False).data,
+                        status=status.HTTP_200_OK, )
+    
+    def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        queryset = Project.objects.all()
+        serializer_class = ProjectSerializer
+        return Response(serializer_class(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+
+    def create(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        response = check_arguments(request.data, [
+            'name',
+            'description',
+        ])
+        if response[0] != 0:
+            return response[1]
+
+        name = request.data['name']
+        description = request.data['description']
+
+        try:
+            Project.objects.get(name=name)
+            return Response(
+                {'message': "A project's name already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            new_project = Project.objects.create(name=name, description=description)
+        try:
+            new_project.full_clean()
+        except ValidationError as ve:
+            print(ve)
+            new_project.delete()
+            return Response(
+                str(ve),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            # return err_invalid_input
+        create_log(user=request.user.username,
+                   desc=f"Project: {new_project.name} has been created by {request.user.username}" )
+        return Response(
+            {
+                'message': 'A Project has been created',
+                'result': ProjectSerializer(new_project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
     
