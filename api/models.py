@@ -21,7 +21,7 @@ class Project(models.Model):
 
 class Dicom(models.Model):
     name = models.CharField(max_length=200)
-    data = models.FileField()
+    data = models.CharFieldField()
     owner = models.ForeignKey(
         User,
         related_name='dicom',
