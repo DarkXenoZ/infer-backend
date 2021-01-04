@@ -273,4 +273,30 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-    
+
+    @action(detail=True, methods=['POST'], )    
+    def add_user(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        if not request.user.is_staff:
+            return err_no_permission
+        response = check_arguments(request.data, ['user',])
+        if response[0] != 0:
+            return response[1]
+        try:
+            user = User.objects.get(username=request.data['user'])
+        except:
+            return err_not_found
+        
+        try:
+            Project.objects.get(name=project.name,users=user)
+            return Response(
+                {'message': "The user already join in a project"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            project.users.add(user)
+            project.save()
+        
