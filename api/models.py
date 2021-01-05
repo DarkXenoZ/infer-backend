@@ -6,6 +6,9 @@ from django.core.validators import RegexValidator, \
 # Class disease
 class Diag(models.Model):
     name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('name',)
     
 # Class project
 class Project(models.Model):
@@ -16,17 +19,21 @@ class Project(models.Model):
         related_name='projects',
         blank=True,
     )
+    class Meta:
+        unique_together = ('name',)
 
 
 
 class Dicom(models.Model):
     name = models.CharField(max_length=200)
-    data = models.CharFieldField()
+    data = models.CharField()
     owner = models.ForeignKey(
-        User,
+        Project,
         related_name='dicom',
         on_delete=models.PROTECT,
     )
+    class Meta:
+        unique_together = ('name',)
 
 class Log(models.Model):
     user = models.ForeignKey(
@@ -36,7 +43,7 @@ class Log(models.Model):
         null=True,
     )
     desc = models.CharField(max_length=100)
-    timestamp = models.DateTimeField(auto_now_add=True, blank=True, )
+    timestamp = models.DateTimeField(auto_now_add=True, )
 
     def __str__(self):
         try:
