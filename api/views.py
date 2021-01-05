@@ -221,7 +221,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return err_not_found
 
-        serializer_class = ProjectSerializer
+        serializer_class = UserProjectSerializer
         return Response(serializer_class(project, many=False).data,
                         status=status.HTTP_200_OK, )
     
@@ -264,12 +264,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
             # return err_invalid_input
-        create_log(user=request.user.username,
+        create_log(user=request.user,
                    desc=f"Project: {new_project.name} has been created by {request.user.username}" )
         return Response(
             {
                 'message': 'The Project has been created',
-                'result': ProjectSerializer(new_project, many=False).data,
+                'result': UserProjectSerializer(new_project, many=False).data,
             },
             status=status.HTTP_200_OK
         )
@@ -299,6 +299,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             project.users.add(user)
             project.save()
+            return Response(
+            {
+                'message': f'{user.username} is joined',
+                'result': UserProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
     @action(detail=True, methods=['POST'], )    
     def remove_user(self, request,pk=None):
         try:
@@ -319,7 +326,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
         project.users.remove(user)
         project.save()
-        
+        return Response(
+            {
+                'message': f'{user.username} is left',
+                'result': UserProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
             
 
         

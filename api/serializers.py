@@ -2,11 +2,6 @@ from rest_framework import serializers
 from .models import *
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Project
-        fields = ('name','description','users')
-
 
 class DiagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,10 +21,10 @@ class DicomSerializer(serializers.ModelSerializer):
         fields = ('name', 'data',)
 
 
-class UserSerializer(serializers.ModelSerializer):
+class OnlyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name','email')
+        fields = ('username','first_name')
 
 
 class UserLogSerializer(serializers.ModelSerializer):
@@ -39,9 +34,23 @@ class UserLogSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'logs',)
 
+
 class UserProjectSerializer(serializers.ModelSerializer):
-    projects = ProjectSerializer(many=True)
+    users = OnlyUserSerializer(many=True)
 
     class Meta:
+        model = Project
+        fields = ('name','description','users')
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ('name','description','users')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    projects = ProjectSerializer(many=True)
+    class Meta:
         model = User
-        fields = ('username','projects')
+        fields = ('username', 'first_name', 'last_name','email','projects')

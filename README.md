@@ -21,34 +21,17 @@ CC-BE is a backend server stack for the courtcatch project using Django REST Fra
 ## Available Command
 
 	BROWSER	/admin/
-	GET	/api/user/
-	POST	/api/user/
-	GET	/api/user/<username>/
-	GET	/api/user/<username>/courts/
-	POST	/api/user/<username>/change_password/
-	POST	/api/user/<username>/add_credit/
-	POST	/api/booking/<id>/cancel/
-	GET	/api/booking/<id>/get_rackets/
-	GET	/api/booking/<id>/get_shuttlecocks/
-	POST	/api/booking/<id>/reserve_racket/
-	POST	/api/booking/<id>/buy_shuttlecock/
-	GET	/api/log/
-	GET	/api/log/<username>/
-	GET	/api/court?name=<name>&rating=<min_rating>&dist=<max_dist>&lat=<lat>&long=<long>&sort_by=<name|-name|dist|rating>
-	GET /api/court?rackets_count=<count>&end_time=<end>&start_time=<start>&day_of_the_week=<day_of_the_week>
-	GET /api/court?shuttlecocks_count=<count>
-	POST	/api/court/
-	GET	/api/court/<courtname>/
-	POST	/api/court/<courtname>/rate_court/
-	POST	/api/court/<courtname>/add_image/
-	POST	/api/court/<courtname>/book/
-	POST	/api/court/<courtname>/add_racket/
-	POST	/api/court/<courtname>/add_shuttlecock/
-	POST	/api/court/<courtname>/topup_shuttlecock/
-	POST	/api/shuttlecock/<bookId>/cancel/
-	POST	/api/racket/<bookId>/cancel/
-	GET	/api/document/
-	POST	/api/document/
-	GET	/api/document/<username>/
 	POST	/auth/
+	GET		/api/user/
+	POST	/api/user/		(username,password,first_name,last_name,email)
+	GET		/api/user/<username>/
+	GET	/api/user/<username>/courts/
+	GET		/api/project/
+	POST	/api/project/	(name,description)
+	GET		/api/project/<project_name>/
+	POST	/api/project/<project_name>/add_user/		(user)
+	POST	/api/project/<project_name>/remove_user/	(user)
+	
+
+	
 

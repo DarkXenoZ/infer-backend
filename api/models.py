@@ -13,7 +13,7 @@ class Diag(models.Model):
 # Class project
 class Project(models.Model):
     name = models.CharField(max_length=100)
-    description = models.CharField(max_length=400)
+    description = models.CharField(max_length=300)
     users = models.ManyToManyField(
         User,
         related_name='projects',
@@ -25,8 +25,8 @@ class Project(models.Model):
 
 
 class Dicom(models.Model):
-    name = models.CharField(max_length=200)
-    data = models.CharField()
+    name = models.CharField(max_length=100)
+    data = models.CharField(max_length=300)
     owner = models.ForeignKey(
         Project,
         related_name='dicom',

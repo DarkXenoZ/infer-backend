@@ -7,6 +7,7 @@ router = routers.SimpleRouter()
 router.register('user', UserViewSet)
 router.register('log', LogViewSet)
 router.register('dicom', DicomViewSet)
+router.register('project', ProjectViewSet)
 
 
 urlpatterns = [
