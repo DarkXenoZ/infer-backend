@@ -268,7 +268,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                    desc=f"Project: {new_project.name} has been created by {request.user.username}" )
         return Response(
             {
-                'message': 'A Project has been created',
+                'message': 'The Project has been created',
                 'result': ProjectSerializer(new_project, many=False).data,
             },
             status=status.HTTP_200_OK
@@ -299,4 +299,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             project.users.add(user)
             project.save()
+    @action(detail=True, methods=['POST'], )    
+    def remove_user(self, request,pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        if not request.user.is_staff:
+            return err_no_permission
+        response = check_arguments(request.data, ['user',])
+        if response[0] != 0:
+            return response[1]
+        try:
+            user = User.objects.get(projects=project, username=request.data['user'])
+        except:
+            return Response(
+                {'message': "The user not in this project"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        project.users.remove(user)
+        project.save()
+        
+            
+
         
