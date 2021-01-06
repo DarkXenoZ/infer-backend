@@ -1,6 +1,6 @@
-# CC-BE
+# infer-backend
 
-CC-BE is a backend server stack for the courtcatch project using Django REST Framework.
+infer-backend is a backend server stack for the senior project using Django REST Framework.
 
 ## Dependencies Installation
 	
