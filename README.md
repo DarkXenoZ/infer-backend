@@ -1,6 +1,6 @@
 # infer-backend
 
-infer-backend is a backend server stack for the senior project using Django REST Framework.
+infer-backend is a backend server stack for the project using Django REST Framework.
 
 ## Dependencies Installation
 	
@@ -31,7 +31,3 @@ infer-backend is a backend server stack for the senior project using Django REST
 	GET		/api/project/<project_name>/
 	POST	/api/project/<project_name>/add_user/		(user)
 	POST	/api/project/<project_name>/remove_user/	(user)
-	
-
-	
-
