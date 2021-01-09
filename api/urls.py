@@ -9,7 +9,7 @@ router.register('log', LogViewSet)
 router.register('dicom', DicomViewSet)
 router.register('project', ProjectViewSet)
 router.register('pipeline', PipelineViewSet)
-
+router.register('diag', DiagViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

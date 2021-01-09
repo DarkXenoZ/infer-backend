@@ -13,14 +13,13 @@ class Diag(models.Model):
 
 class Pipeline(models.Model):
     name = models.CharField(max_length=100)
-    pipeline_id = models.CharField(max_length=40,null=True)
+    pipeline_id = models.CharField(max_length=40,default="Empty")
     class Meta:
         unique_together = ('pipeline_id',)
 
 class Dicom(models.Model):
     name = models.CharField(max_length=100)
     data = models.FileField(upload_to='image/')
-    is_verified = models.BooleanField(default=False)
     class Meta:
         unique_together = ('name',)
 # Class project
@@ -36,12 +35,15 @@ class Project(models.Model):
         Pipeline,
         related_name='project',
         on_delete=models.PROTECT,
-        default=None
+        default=None,
+        null=True,
+        blank=True,
     )
     dicoms = models.ManyToManyField(
         Dicom,
         related_name='projects',
         blank=True,
+        null=True,
     )
     class Meta:
         unique_together = ('name',)
@@ -63,7 +65,9 @@ class Result(models.Model):
         Diag,
         related_name='result',
         on_delete=models.CASCADE,
-        default=None
+        default=None,
+        null=True,
+        blank=True,
     )
 
 class Log(models.Model):

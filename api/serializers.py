@@ -6,7 +6,7 @@ from .models import *
 class DiagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diag
-        fields = ('name')
+        fields = ('name',)
 
 
 class LogSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class LogSerializer(serializers.ModelSerializer):
 class DicomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dicom
-        fields = ('name', 'data','is_verified')
+        fields = ('name', 'data')
 
 
 class OnlyUserSerializer(serializers.ModelSerializer):
@@ -48,12 +48,29 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ('name','description','pipeline')
 
+class ResultSerializer(serializers.ModelSerializer):
+    project = ProjectSerializer(many=False)
+    dicoms = DicomSerializer(many=False)
+    diag = DiagSerializer(many=False)
+
+    class Meta:
+        model = Result
+        fields = ('project','dicoms','diag')
+
+class ResultNoProjectSerializer(serializers.ModelSerializer):
+    dicoms = DicomSerializer(many=False)
+    diag = DiagSerializer(many=False)
+
+    class Meta:
+        model = Result
+        fields = ('dicoms','diag')
+
 class DicomProjectSerializer(serializers.ModelSerializer):
-    dicoms = DicomSerializer(many=True)
+    result = ResultNoProjectSerializer(many=True)
 
     class Meta:
         model = Project
-        fields = ('name','description','pipeline','dicoms')
+        fields = ('name','description','pipeline','result')
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
@@ -68,11 +85,3 @@ class PipelineSerializer(serializers.ModelSerializer):
         model = Pipeline
         fields = ('name','pipeline_id')
 
-class ResultSerializer(serializers.ModelSerializer):
-    project = ProjectSerializer(many=False)
-    dicoms = DicomSerializer(many=True)
-    diag = DiagSerializer(many=False)
-
-    class Meta:
-        model = Result
-        fields = ('project','dicoms','diag')
