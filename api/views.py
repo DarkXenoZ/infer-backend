@@ -6,7 +6,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 from .serializers import *
-
+from django.core.files.storage import FileSystemStorage
+import subprocess
+import time
 # Create your views here.
 from django.http import HttpResponse
 
@@ -194,21 +196,6 @@ class LogViewSet(viewsets.ModelViewSet):
 
     def create(self):
         return err_not_allowed
-
-
-class DicomViewSet(viewsets.ModelViewSet):
-    queryset = Dicom.objects.all()
-    serializer_class = DicomSerializer
-
-    def retrieve(self, request, pk=None):
-        try:
-            dicom = Dicom.objects.get(name=pk)
-        except:
-            return err_not_found
-
-        serializer_class = DicomSerializer
-        return Response(serializer_class(dicom, many=False).data,
-                        status=status.HTTP_200_OK, )
     
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -275,6 +262,32 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=['POST'], )    
+    def change_pipeline(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        if not request.user.is_staff:
+            return err_no_permission
+        response = check_arguments(request.data, ['pipeline',])
+        if response[0] != 0:
+            return response[1]
+        try:
+            pipeline = Pipeline.objects.get(name=request.data['pipeline'])
+        except:
+            return err_not_found
+        project.pipeline = pipeline
+        project.save()
+        return Response(
+            {
+                'message': 'Changed',
+                'result': ProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+    @action(detail=True, methods=['POST'], )    
     def add_user(self, request, pk=None):
         try:
             project = Project.objects.get(name=pk)
@@ -333,6 +346,202 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-            
 
+    @action (detail=True, methods=['POST'],)
+    def listDicom(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        try:
+            user = project.users.get(username=request.user.username)
+        except:
+            return err_no_permission
+        try:
+            dicoms = Dicom.objects.filter(projects=project)
+        except:
+            return Response(
+                {'message': "Empty project"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer_class = DicomSerializer
+        return Response(serializer_class(dicoms, many=True).data,
+                        status=status.HTTP_200_OK)
+        #add dicoom to project
+    @action (detail=True, methods=['POST'],)
+    def addDicom(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        try:
+            user = project.users.get(username=request.user.username)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['name',])
+        if response[0] != 0:
+            return response[1]
+        try:
+            dicom = project.dicoms.get(name=request.data['name'])
+        except:
+            return err_not_found
+        project.dicoms.add(dicom)
+        project.save()
+        result = Result.objects.create(project=project,dicoms=dicom,diag=None)
+        result.save()
+        return Response(
+            {
+                'message': 'Dicom added',
+                'result': DicomProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+            
+        #edit result and save
+    @action (detail=True, methods=['POST'],)
+    def editDicom(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        try:
+            user = project.users.get(username=request.user.username)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['diag','name'])
+        if response[0] != 0:
+            return response[1]
+        try:
+            diag = Diag.objects.get(name=request.data['diag'])
+        except:
+            return err_not_found
+        try:
+            dicom = project.dicoms.get(name=request.data['name'])
+        except:
+            return err_not_found
+        try:
+            result = Result.objects.get(project=project,dicoms=dicom)
+        except:
+            return err_not_found
+        old = result.diag
+        result.diag = diag
+        result.save()
+            # return err_invalid_input
+        create_log(user=request.user,
+                   desc=f"{request.user.username} edit {dicom.name} from {old} to {result.diag} ")
+        return Response(
+            {
+                'message': 'Dicom Uploaded',
+                'result': ResultSerializer(result, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+        #infer not finish na ja
+    @action (detail=True, methods=['POST'],)
+    def inferDicom(self, request, pk=None):
+        try:
+            project = Project.objects.get(name=pk)
+        except:
+            return err_not_found
+        try:
+            user = project.users.get(username=request.user.username)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['diag','name'])
+        if response[0] != 0:
+            return response[1]
+        try:
+            diag = Diag.objects.get(name=request.data['diag'])
+        except:
+            return err_not_found
+        try:
+            dicom = project.dicoms.get(name=request.data['name'])
+        except:
+            return err_not_found
+        try:
+            result = Result.objects.get(project=project,dicoms=dicom)
+        except:
+            return err_not_found
+
+class PipelineViewSet(viewsets.ModelViewSet):
+    queryset = Pipeline.objects.all()
+    serializer_class = PipelineSerializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            pipeline = Pipeline.objects.get(name=pk)
+        except:
+            return err_not_found
+
+        serializer_class = PipelineSerializer
+        return Response(serializer_class(pipeline, many=False).data,
+                        status=status.HTTP_200_OK, )       
+    
+    def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        queryset = Pipeline.objects.all()
+        serializer_class = PipelineSerializer
+        return Response(serializer_class(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+
+
+class DicomViewSet(viewsets.ModelViewSet):
+    queryset = Dicom.objects.all()
+    serializer_class = DicomSerializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            dicom = Dicom.objects.get(name=pk)
+        except:
+            return err_not_found
+
+        serializer_class = DicomSerializer
+        return Response(serializer_class(dicom, many=False).data,
+                        status=status.HTTP_200_OK, )       
+    
+    def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        queryset = Dicom.objects.all()
+        serializer_class = DicomSerializer
+        return Response(serializer_class(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+    
+    @action (detail=True, methods=['POST'],)
+    def uploadDicom(self, request, pk=None):
+        response = check_arguments(request.data, ['name','data',])
+        if response[0] != 0:
+            return response[1]
         
+        name = request.data['name']
+        data = request.data['data'] 
+        try:
+            Dicom.objects.get(name=name)
+            return Response(
+                {'message': 'This name already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            dicom = Dicom.objects.create(name=name,data=data)
+        try:
+            dicom.full_clean()
+        except ValidationError as ve:
+            print(ve)
+            dicom.delete()
+            return Response(
+                str(ve),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            # return err_invalid_input
+        create_log(user=request.user,
+                   desc=f"{request.user.username} upload {dicom.name}  ")
+        return Response(
+            {
+                'message': 'Dicom Uploaded',
+                'result': DicomSerializer(dicom, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+
+    
