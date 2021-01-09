@@ -4,15 +4,16 @@ infer-backend is a backend server stack for the project using Django REST Framew
 
 ## Dependencies Installation
 	
-	$ pip3 install django
-	$ pip3 install djangorestframework
-	$ pip3 install django-cors-headers
+	$ pip install django==2.2
+	$ pip install djangorestframework
+	$ pip install django-cors-headers==3.5.0
+	$ python3 manage.py runserver
 
 ## Usage
 
 	cd into root directory
 	$ python3 manage.py runserver
-	// Run once then migrate to init the db
+	// Run once then migrate to initialize the datebase
 	$ python3 manage.py migrate
 	$ python3 manage.py runserver
 	To authenticate, POST to /auth/ then put the token in the header as such {'Authorization': 'Token <token>'}
@@ -40,4 +41,3 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	POST	/api/dicom/		(name,data)
 	GET		/api/diag/
 	POST	/api/diag/		(name)
-	
