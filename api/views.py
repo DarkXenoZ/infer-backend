@@ -347,7 +347,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    @action (detail=True, methods=['POST'],)
+    @action (detail=True, methods=['GET'],)
     def list_dicom(self, request, pk=None):
         try:
             project = Project.objects.get(name=pk)
@@ -505,13 +505,54 @@ class PipelineViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
-        if not request.user.is_staff:
-            return err_no_permission
         queryset = Pipeline.objects.all()
         serializer_class = PipelineSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
 
+    def create(self, request, pk=None):
+        response = check_arguments(request.data, ['name','id'])
+        if response[0] != 0:
+            return response[1]
+        
+        name = request.data['name']
+        pipeline_id = request.data['id']
+        try:
+            Pipeline.objects.get(name=name)
+            return Response(
+                {'message': 'This name already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            pass
+        try:
+            Pipeline.objects.get(pipeline_id=pipeline_id)
+            return Response(
+                {'message': 'This pipeline_id already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id)
+        try:
+            pipeline.full_clean()
+        except ValidationError as ve:
+            print(ve)
+            pipeline.delete()
+            return Response(
+                str(ve),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            # return err_invalid_input
+        create_log(user=request.user,
+                   desc=f"{request.user.username} create {pipeline.name} (pipeline) ")
+        return Response(
+            {
+                'message': 'Pipeline created',
+                'result': PipelineSerializer(pipeline, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )    
+    
 
 class DicomViewSet(viewsets.ModelViewSet):
     queryset = Dicom.objects.all()
@@ -561,7 +602,7 @@ class DicomViewSet(viewsets.ModelViewSet):
             )
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} upload {dicom.name}  ")
+                   desc=f"{request.user.username} upload {dicom.name} (dicom)  ")
         return Response(
             {
                 'message': 'Dicom Uploaded',
@@ -615,7 +656,7 @@ class DiagViewSet(viewsets.ModelViewSet):
             )
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} create {diag.name}  ")
+                   desc=f"{request.user.username} create {diag.name} (diag) ")
         return Response(
             {
                 'message': 'Diag created',
