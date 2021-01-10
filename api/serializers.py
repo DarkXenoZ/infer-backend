@@ -6,7 +6,7 @@ from .models import *
 class DiagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diag
-        fields = ('name',)
+        fields = ('id','name',)
 
 
 class LogSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class LogSerializer(serializers.ModelSerializer):
 class DicomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dicom
-        fields = ('name', 'data')
+        fields = ('id','name', 'data')
 
 
 class OnlyUserSerializer(serializers.ModelSerializer):
@@ -46,7 +46,7 @@ class UserProjectSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('name','description','pipeline')
+        fields = ('id','name','description','pipeline')
 
 class ResultSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(many=False)
@@ -83,5 +83,5 @@ class PipelineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pipeline
-        fields = ('name','pipeline_id')
+        fields = ('id','name','pipeline_id')
 

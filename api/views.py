@@ -28,7 +28,11 @@ err_not_allowed = Response(
     {'message': 'Operation Not Allowed'},
     status=status.HTTP_405_METHOD_NOT_ALLOWED
 )
-
+def not_found(Object):
+    return Response(
+        {'message': f'{Object} not found'},
+        status=status.HTTP_404_NOT_FOUND,
+    )
 
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
@@ -159,7 +163,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = User.objects.get(username=pk)
         project_list = user.projects
         serializer_class = ProjectSerializer
-        if len(court) == 0:
+        if len(project_list) == 0:
             return err_not_found
         return Response(
             serializer_class(project_list, many=True).data,
@@ -206,22 +210,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         result = Result.objects.filter(project=project)
 
         serializer_class1 = UserProjectSerializer
         serializer_class2 = ResultNoProjectSerializer
         return Response(
             {
-                'user': UserProjectSerializer(new_project, many=False).data,
+                'user': UserProjectSerializer(project, many=False).data,
                 'result' : ResultNoProjectSerializer(result,many=True).data,
             },
             status=status.HTTP_200_OK
         )
     
     def list(self, request):
-        if not request.user.is_staff:
-            return err_no_permission
         queryset = Project.objects.all()
         serializer_class = ProjectSerializer
         return Response(serializer_class(queryset, many=True).data,
@@ -273,7 +275,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
         response = check_arguments(request.data, ['pipeline',])
@@ -282,7 +284,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             pipeline = Pipeline.objects.get(name=request.data['pipeline'])
         except:
-            return err_not_found
+            return not_found('Pipeline')
         project.pipeline = pipeline
         project.save()
         return Response(
@@ -299,7 +301,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
         response = check_arguments(request.data, ['user',])
@@ -308,7 +310,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             user = User.objects.get(username=request.data['user'])
         except:
-            return err_not_found
+            return not_found('User')
         
         try:
             Project.objects.get(name=project.name,users=user)
@@ -331,7 +333,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
         response = check_arguments(request.data, ['user',])
@@ -359,7 +361,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         try:
             user = project.users.get(username=request.user.username)
         except:
@@ -380,7 +382,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         try:
             user = project.users.get(username=request.user.username)
         except:
@@ -391,7 +393,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             dicom = Dicom.objects.get(name=request.data['name'])
         except:
-            return err_not_found
+            return not_found('Dicom')
         project.dicoms.add(dicom)
         project.save()
         result = Result.objects.create(project=project,dicoms=dicom,diag=None)
@@ -408,7 +410,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         try:
             user = project.users.get(username=request.user.username)
         except:
@@ -419,7 +421,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             dicom = Dicom.objects.get(name=request.data['name'])
         except:
-            return err_not_found
+            return not_found('Dicom')
         result = Result.objects.get(project=project,dicoms=dicom)
         result.delete()
         project.dicoms.remove(dicom)
@@ -437,7 +439,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         try:
             user = project.users.get(username=request.user.username)
         except:
@@ -448,7 +450,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             diag = Diag.objects.get(name=request.data['diag'])
         except:
-            return err_not_found
+            return not_found('Diag')
         try:
             dicom = project.dicoms.get(name=request.data['name'])
         except:
@@ -456,7 +458,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             result = Result.objects.get(project=project,dicoms=dicom)
         except:
-            return err_not_found
+            return not_found('Result')
         old = result.diag
         result.diag = diag
         result.save()
@@ -476,7 +478,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Project')
         try:
             user = project.users.get(username=request.user.username)
         except:
@@ -487,11 +489,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             dicoms = project.dicoms
         except:
-            return err_not_found
+            return not_found('Dicom')
         try:
             pipeline = project.pipeline
         except:
-            return err_not_found
+            return not_found('Pipeline')
         import subprocess, os, time, json, csv
 
         tmp_path = "../media/tmp/"
@@ -544,7 +546,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         try:
             pipeline = Pipeline.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Pipeline')
 
         serializer_class = PipelineSerializer
         return Response(serializer_class(pipeline, many=False).data,
@@ -608,7 +610,7 @@ class DicomViewSet(viewsets.ModelViewSet):
         try:
             dicom = Dicom.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Dicom')
 
         serializer_class = DicomSerializer
         return Response(serializer_class(dicom, many=False).data,
@@ -665,7 +667,7 @@ class DiagViewSet(viewsets.ModelViewSet):
         try:
             diag = Diag.objects.get(id=pk)
         except:
-            return err_not_found
+            return not_found('Diag')
 
         serializer_class = DiagSerializer
         return Response(serializer_class(diag, many=False).data,
