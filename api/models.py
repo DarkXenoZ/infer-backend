@@ -7,13 +7,21 @@ from django.core.validators import RegexValidator, \
 class Diag(models.Model):
     name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.name
+    
     class Meta:
         unique_together = ('name',)
+    
 
 
 class Pipeline(models.Model):
     name = models.CharField(max_length=100)
     pipeline_id = models.CharField(max_length=40,default="Empty")
+
+    def __str__(self):
+        return self.name
+    
     class Meta:
         unique_together = ('pipeline_id',)
 
@@ -49,6 +57,10 @@ class Project(models.Model):
         blank=True,
         null=True,
     )
+
+    def __str__(self):
+        return self.name
+    
     class Meta:
         unique_together = ('name',)
 
@@ -73,6 +85,9 @@ class Result(models.Model):
         null=True,
         blank=True,
     )
+    def __str__(self):
+        return f"Project: {project.name}, Dicom: {dicoms.name},Diag: {diag.name} " 
+    
 
 class Log(models.Model):
     user = models.ForeignKey(
