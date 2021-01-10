@@ -19,9 +19,13 @@ class Pipeline(models.Model):
 
 class Dicom(models.Model):
     name = models.CharField(max_length=100)
-    data = models.FileField(upload_to='image/')
+    data = models.FileField(upload_to='dicom/')
+    def __str__(self):
+        return self.name
+    
     class Meta:
         unique_together = ('name',)
+    
 # Class project
 class Project(models.Model):
     name = models.CharField(max_length=100)

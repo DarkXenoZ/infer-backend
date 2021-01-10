@@ -465,7 +465,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         #infer not finish na ja
     @action (detail=True, methods=['POST'],)
-    def inferDicom(self, request, pk=None):
+    def infer_dicom(self, request, pk=None):
         try:
             project = Project.objects.get(name=pk)
         except:
@@ -474,22 +474,61 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['diag','name'])
+        response = check_arguments(request.data, ['name',])
         if response[0] != 0:
             return response[1]
         try:
-            diag = Diag.objects.get(name=request.data['diag'])
+            dicoms = project.dicoms
         except:
             return err_not_found
         try:
-            dicom = project.dicoms.get(name=request.data['name'])
+            pipeline = project.pipeline
         except:
             return err_not_found
-        try:
-            result = Result.objects.get(project=project,dicoms=dicom)
-        except:
-            return err_not_found
+        import subprocess, os, time, json, csv
 
+        tmp_path = "../media/tmp/"
+        file_path = "../media/"
+        os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
+        for dicom in dicoms:
+            os.symlink(file_path+dicom.data.name, tmp_path+dicom.data.name)
+        output1 = subprocess.check_output(
+        f"clara create job -n {request.data['name']} -p {pipeline.pipeline_id} -f {tmp_path} ", 
+        shell=True, 
+        encoding='UTF-8'
+        )
+        line = output1.split('\n')
+        job = (line[0].split(':'))[1]
+        output2 = subprocess.check_output(f" clara start job -j {job} ", shell=True, encoding='UTF-8')
+        while True:
+            check = subprocess.check_output(f" clara describe job -j {job} ", shell=True, encoding='UTF-8')
+            line_check = (check.split('\n'))[9]
+            status = (line_check.split(':'))[1].strip()
+            if "1" in status:
+                break
+            else: time.sleep(1)
+        output3 = subprocess.check_output(f"clara download {job}:/operators/{pipeline.name}/* {tmp_path} ", shell=True)
+        for dicom in dicoms:
+            os.unlink(tmp_path+dicom.data.name)
+        # not completed
+        csvFilePath = tmp_path+'/Names.csv'
+        jsonFilePath = tmp_path+'Names.json'
+        data = {} 
+        with open(csvFilePath, encoding='utf-8') as csvf: 
+            csvReader = csv.DictReader(csvf) 
+            for rows in csvReader: 
+                key = rows['No'] 
+                data[key] = rows 
+        with open(jsonFilePath, 'w', encoding='utf-8') as jsonf: 
+            jsonf.write(json.dumps(data, indent=4))
+        return Response(
+            {
+                'message': 'Completed',
+                'result': jsonFilePath,
+            },
+            status=status.HTTP_200_OK
+        )
+        
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
