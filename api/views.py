@@ -207,10 +207,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(name=pk)
         except:
             return err_not_found
+        result = Result.objects.filter(project=project)
 
-        serializer_class = UserProjectSerializer
-        return Response(serializer_class(project, many=False).data,
-                        status=status.HTTP_200_OK, )
+        serializer_class1 = UserProjectSerializer
+        serializer_class2 = ResultNoProjectSerializer
+        return Response(
+            {
+                'user': UserProjectSerializer(new_project, many=False).data,
+                'result' : ResultNoProjectSerializer(result,many=True).data,
+            },
+            status=status.HTTP_200_OK
+        )
     
     def list(self, request):
         if not request.user.is_staff:
