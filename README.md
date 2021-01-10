@@ -31,19 +31,19 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	POST	/api/user/<username>/change_password	(password)
 	GET	/api/project/
 	POST	/api/project/	(name,description)
-	GET	/api/project/<project_name>/
-	POST	/api/project/<project_name>/add_user/		(user)
-	POST	/api/project/<project_name>/remove_user/	(user)
-	POST	/api/project/<project_name>/add_dicom/		(name)
-	POST	/api/project/<project_name>/remove_dicom/	(name)
-	POST	/api/project/<project_name>/edit_dicom/	(name,diag)
-	GET	/api/project/<project_name>/list_dicom/
+	GET	/api/project/<project_id>/
+	POST	/api/project/<project_id>/add_user/		(user)
+	POST	/api/project/<project_id>/remove_user/	(user)
+	POST	/api/project/<project_id>/add_dicom/		(name)
+	POST	/api/project/<project_id>/remove_dicom/	(name)
+	POST	/api/project/<project_id>/edit_dicom/	(name,diag)
+	GET	/api/project/<project_id>/list_dicom/
 	GET	/api/pipeline/
-	GET	/api/pipeline/<pipeline_name>
+	GET	/api/pipeline/<pipeline_id>
 	POST	/api/pipeline/	(name,id)
 	GET	/api/dicom/
-	GET	/api/dicom/<dicom_name>
+	GET	/api/dicom/<dicom_id>
 	POST	/api/dicom/		(name,data)
 	GET	/api/diag/
-	GET	/api/diag/<diag_name>
+	GET	/api/diag/<diag_id>
 	POST	/api/diag/		(name)

@@ -204,7 +204,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         result = Result.objects.filter(project=project)
@@ -271,7 +271,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'], )    
     def change_pipeline(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         if not request.user.is_staff:
@@ -297,7 +297,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'], )    
     def add_user(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         if not request.user.is_staff:
@@ -329,7 +329,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'], )    
     def remove_user(self, request,pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         if not request.user.is_staff:
@@ -357,7 +357,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action (detail=True, methods=['GET'],)
     def list_dicom(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         try:
@@ -378,7 +378,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action (detail=True, methods=['POST'],)
     def add_dicom(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         try:
@@ -406,7 +406,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action (detail=True, methods=['POST'],)
     def remove_dicom(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         try:
@@ -435,7 +435,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action (detail=True, methods=['POST'],)
     def edit_dicom(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         try:
@@ -474,7 +474,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action (detail=True, methods=['POST'],)
     def infer_dicom(self, request, pk=None):
         try:
-            project = Project.objects.get(name=pk)
+            project = Project.objects.get(id=pk)
         except:
             return err_not_found
         try:
@@ -542,7 +542,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            pipeline = Pipeline.objects.get(name=pk)
+            pipeline = Pipeline.objects.get(id=pk)
         except:
             return err_not_found
 
@@ -606,7 +606,7 @@ class DicomViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            dicom = Dicom.objects.get(name=pk)
+            dicom = Dicom.objects.get(id=pk)
         except:
             return err_not_found
 
@@ -663,7 +663,7 @@ class DiagViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            diag = Diag.objects.get(name=pk)
+            diag = Diag.objects.get(id=pk)
         except:
             return err_not_found
 
