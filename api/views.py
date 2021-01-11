@@ -212,13 +212,29 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         result = Result.objects.filter(project=project)
-
-        serializer_class1 = UserProjectSerializer
-        serializer_class2 = ResultNoProjectSerializer
+        diag_list ={}
+        verified_count=0
+        for each in result:
+            if(each.dicoms.is_verified):
+                verified_count+=1
+            if each.diag == None:
+                pass
+            diag = each.diag.name
+            if diag not in diag_list:
+                diag_list[diag] = 1
+            else:
+                diag_list[diag]+= 1
+        total = sum(diag_list.values())
+        for i in diag_list: 
+            diag_list[i] = diag_list[i]/total
+        
         return Response(
             {
-                'user': UserProjectSerializer(project, many=False).data,
+                'project': UserProjectSerializer(project, many=False).data,
                 'result' : ResultNoProjectSerializer(result,many=True).data,
+                'predicted': diag_list,
+                'verified': verified_count,
+                'unverified' : result.count(),
             },
             status=status.HTTP_200_OK
         )
@@ -278,15 +294,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
-        response = check_arguments(request.data, ['pipeline',])
+        response = check_arguments(request.data, ['id',])
         if response[0] != 0:
             return response[1]
         try:
-            pipeline = Pipeline.objects.get(name=request.data['pipeline'])
+            pipeline = Pipeline.objects.get(id=request.data['id'])
         except:
             return not_found('Pipeline')
-        project.pipeline = pipeline
-        project.save()
+        pipeline.project = project
+        pipeline.save()
         return Response(
             {
                 'message': 'Changed',
@@ -304,13 +320,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
-        response = check_arguments(request.data, ['user',])
+        response = check_arguments(request.data, ['username',])
         if response[0] != 0:
             return response[1]
         try:
-            user = User.objects.get(username=request.data['user'])
+            user = User.objects.get(username=request.data['username'])
         except:
-            return not_found('User')
+            return not_found('Username')
         
         try:
             Project.objects.get(name=project.name,users=user)
@@ -336,14 +352,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
-        response = check_arguments(request.data, ['user',])
+        response = check_arguments(request.data, ['username',])
         if response[0] != 0:
             return response[1]
         try:
-            user = User.objects.get(projects=project, username=request.data['user'])
+            user = User.objects.get(projects=project, username=request.data['username'])
         except:
             return Response(
-                {'message': "The user not in this project"},
+                {'message': "This user not in the project"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         project.users.remove(user)
@@ -367,7 +383,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         try:
-            dicoms = Dicom.objects.filter(projects=project)
+            dicoms = Dicom.objects.filter(project=project)
         except:
             return Response(
                 {'message': "Empty project"},
@@ -387,15 +403,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['name',])
+        response = check_arguments(request.data, ['id',])
         if response[0] != 0:
             return response[1]
         try:
-            dicom = Dicom.objects.get(name=request.data['name'])
+            dicom = Dicom.objects.get(id=request.data['id'])
         except:
             return not_found('Dicom')
-        project.dicoms.add(dicom)
-        project.save()
+        dicom.project.add(project)
+        dicom.save()
         result = Result.objects.create(project=project,dicoms=dicom,diag=None)
         result.save()
         return Response(
@@ -415,17 +431,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['name',])
+        response = check_arguments(request.data, ['id',])
         if response[0] != 0:
             return response[1]
         try:
-            dicom = Dicom.objects.get(name=request.data['name'])
+            dicom = Dicom.objects.get(id=request.data['id'])
         except:
             return not_found('Dicom')
         result = Result.objects.get(project=project,dicoms=dicom)
         result.delete()
-        project.dicoms.remove(dicom)
-        project.save()
+        dicom.project.remove(project)
+        dicom.save()
         return Response(
             {
                 'message': 'Dicom deleted',
@@ -444,15 +460,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['diag','name'])
+        response = check_arguments(request.data, ['diag_id','dicom_id'])
         if response[0] != 0:
             return response[1]
         try:
-            diag = Diag.objects.get(name=request.data['diag'])
+            diag = Diag.objects.get(id=request.data['diag_id'])
         except:
             return not_found('Diag')
         try:
-            dicom = project.dicoms.get(name=request.data['name'])
+            dicom = Dicom.objects.get(id=request.data['dicom_id'])
         except:
             return err_not_found
         try:
@@ -483,15 +499,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['name',])
+        response = check_arguments(request.data, ['id',])
         if response[0] != 0:
             return response[1]
         try:
-            dicoms = project.dicoms
+            dicoms = Dicom.objects.filter(project=project)
         except:
             return not_found('Dicom')
         try:
-            pipeline = project.pipeline
+            pipeline = Pipeline.objects.filter(project=project)
         except:
             return not_found('Pipeline')
         import subprocess, os, time, json, csv

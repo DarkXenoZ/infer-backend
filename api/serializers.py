@@ -40,13 +40,13 @@ class UserProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('name','description','pipeline','users')
+        fields = ('id','name','description','users')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name','description','pipeline')
+        fields = ('id','name',)
 
 class ResultSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(many=False)
@@ -70,7 +70,7 @@ class DicomProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('name','description','pipeline','result')
+        fields = ('id','name','description','pipeline','result')
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)

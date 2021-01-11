@@ -3,6 +3,22 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, \
     MinValueValidator, MaxValueValidator
 
+# Class project
+class Project(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=300)
+    users = models.ManyToManyField(
+        User,
+        related_name='projects',
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        unique_together = ('name',)
+
 # Class disease
 class Diag(models.Model):
     name = models.CharField(max_length=100)
@@ -18,7 +34,15 @@ class Diag(models.Model):
 class Pipeline(models.Model):
     name = models.CharField(max_length=100)
     pipeline_id = models.CharField(max_length=40,default="Empty")
-
+    accuracy = models.FloatField(blank=True,default=0.0)
+    project = models.ForeignKey(
+        Project,
+        related_name='pipelines',
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
+        blank=True,
+    )
     def __str__(self):
         return self.name
     
@@ -28,41 +52,21 @@ class Pipeline(models.Model):
 class Dicom(models.Model):
     name = models.CharField(max_length=100)
     data = models.FileField(upload_to='dicom/')
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        unique_together = ('name',)
-    
-# Class project
-class Project(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.CharField(max_length=300)
-    users = models.ManyToManyField(
-        User,
-        related_name='projects',
-        blank=True,
-    )
-    pipeline = models.ForeignKey(
-        Pipeline,
-        related_name='project',
+    is_verified = models.BooleanField(null=True, default=False)
+    project = models.ForeignKey(
+        Project,
+        related_name='dicoms',
         on_delete=models.PROTECT,
         default=None,
         null=True,
         blank=True,
     )
-    dicoms = models.ManyToManyField(
-        Dicom,
-        related_name='projects',
-        blank=True,
-        null=True,
-    )
-
     def __str__(self):
         return self.name
     
     class Meta:
         unique_together = ('name',)
+    
 
 class Result(models.Model):
     project = models.ForeignKey(
