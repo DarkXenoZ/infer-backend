@@ -35,14 +35,6 @@ class UserLogSerializer(serializers.ModelSerializer):
         fields = ('username', 'logs',)
 
 
-class UserProjectSerializer(serializers.ModelSerializer):
-    users = OnlyUserSerializer(many=True)
-
-    class Meta:
-        model = Project
-        fields = ('id','name','description','users')
-
-
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
@@ -85,3 +77,9 @@ class PipelineSerializer(serializers.ModelSerializer):
         model = Pipeline
         fields = ('id','name','pipeline_id')
 
+class UserProjectSerializer(serializers.ModelSerializer):
+    users = OnlyUserSerializer(many=True)
+    pipelines =PipelineSerializer(many=False)
+    class Meta:
+        model = Project
+        fields = ('id','name','description','pipelines','users')
