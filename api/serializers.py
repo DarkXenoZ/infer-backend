@@ -38,7 +38,7 @@ class UserLogSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name',)
+        fields = ('id','name','description')
 
 class ResultSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(many=False)
