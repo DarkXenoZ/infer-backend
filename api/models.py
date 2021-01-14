@@ -99,7 +99,7 @@ class Result(models.Model):
         default=None,
     )
     is_verified = models.IntegerField(default=0) # 0:in process , 1: AI-Annotated , 2: Verified
-    note = models.CharField(blank=true,max_length=300)
+    note = models.CharField(blank=True,max_length=300)
     def __str__(self):
         return f"Project: {project.name}, Image: {images.name},Diag: {diag.name} " 
     
