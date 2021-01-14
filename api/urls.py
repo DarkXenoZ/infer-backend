@@ -6,7 +6,7 @@ from .views import *
 router = routers.SimpleRouter()
 router.register('user', UserViewSet)
 router.register('log', LogViewSet)
-router.register('dicom', DicomViewSet)
+router.register('image', ImageViewSet)
 router.register('project', ProjectViewSet)
 router.register('pipeline', PipelineViewSet)
 router.register('diag', DiagViewSet)

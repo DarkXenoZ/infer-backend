@@ -15,10 +15,10 @@ class LogSerializer(serializers.ModelSerializer):
         fields = ('desc', 'timestamp',)
 
 
-class DicomSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Dicom
-        fields = ('id','name', 'data')
+        model = Image
+        fields = ('id','name', 'data','patient_name','patient_id')
 
 
 class OnlyUserSerializer(serializers.ModelSerializer):
@@ -38,26 +38,26 @@ class UserLogSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name','description')
+        fields = ('id','name','description','task')
 
 class ResultSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(many=False)
-    dicoms = DicomSerializer(many=False)
+    images = ImageSerializer(many=False)
     diag = DiagSerializer(many=False)
 
     class Meta:
         model = Result
-        fields = ('project','dicoms','diag')
+        fields = ('project','images','diag')
 
 class ResultNoProjectSerializer(serializers.ModelSerializer):
-    dicoms = DicomSerializer(many=False)
+    images = ImageSerializer(many=False)
     diag = DiagSerializer(many=False)
 
     class Meta:
         model = Result
-        fields = ('dicoms','diag')
+        fields = ('images','diag')
 
-class DicomProjectSerializer(serializers.ModelSerializer):
+class ImageProjectSerializer(serializers.ModelSerializer):
     result = ResultNoProjectSerializer(many=True)
 
     class Meta:
@@ -82,4 +82,9 @@ class UserProjectSerializer(serializers.ModelSerializer):
     pipelines =PipelineSerializer(many=True)
     class Meta:
         model = Project
-        fields = ('id','name','description','pipelines','users')
+        fields = ('id','name','description','pipelines','users','task')
+
+class ImageDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ('id','name', 'data','patient_name','patient_id','patient_age','physician_name','content_date')

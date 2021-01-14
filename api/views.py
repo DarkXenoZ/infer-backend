@@ -9,6 +9,12 @@ from .serializers import *
 from django.core.files.storage import FileSystemStorage
 import subprocess
 import time
+import pydicom
+import imageio
+from datetime import datetime
+from django.core.files import File
+import os
+
 # Create your views here.
 from django.http import HttpResponse
 
@@ -213,10 +219,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Project')
         result = Result.objects.filter(project=project)
         diag_list ={}
-        verified_count=0
+        status_count=[0,0,0]
         for each in result:
-            if(each.dicoms.is_verified):
-                verified_count+=1
+            status_count[each.is_verified]+=1
             if each.diag == None:
                 pass
             diag = each.diag.name
@@ -233,8 +238,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 'project': UserProjectSerializer(project, many=False).data,
                 'result' : ResultNoProjectSerializer(result,many=True).data,
                 'predicted': diag_list,
-                'verified': verified_count,
-                'unverified' : result.count(),
+                'in process': status_count[0],
+                'ai-annotated' : status_count[1],
+                'verified' : status_count[2],
             },
             status=status.HTTP_200_OK
         )
@@ -251,13 +257,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, [
             'name',
             'description',
+            'task',
         ])
         if response[0] != 0:
             return response[1]
 
         name = request.data['name']
         description = request.data['description']
-
+        task = (request.data['task']).lower()
+        if not Project.check_task(task):
+            return err_invalid_input
         try:
             Project.objects.get(name=name)
             return Response(
@@ -265,7 +274,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            new_project = Project.objects.create(name=name, description=description)
+            new_project = Project.objects.create(name=name, description=description,task=task)
         try:
             new_project.full_clean()
         except ValidationError as ve:
@@ -301,7 +310,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             pipeline = Pipeline.objects.get(id=request.data['id'])
         except:
             return not_found('Pipeline')
-        pipeline.project = project
+        pipeline.project.add(project)
         pipeline.save()
         return Response(
             {
@@ -373,7 +382,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
 
     @action (detail=True, methods=['GET'],)
-    def list_dicom(self, request, pk=None):
+    def list_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -383,18 +392,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         try:
-            dicoms = Dicom.objects.filter(project=project)
+            images = Image.objects.filter(project=project)
         except:
             return Response(
                 {'message': "Empty project"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer_class = DicomProjectSerializer
+        serializer_class = ImageProjectSerializer
         return Response(serializer_class(project, many=False).data,
                         status=status.HTTP_200_OK)
         #add dicoom to project
     @action (detail=True, methods=['POST'],)
-    def add_dicom(self, request, pk=None):
+    def add_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -407,22 +416,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         try:
-            dicom = Dicom.objects.get(id=request.data['id'])
+            image = Image.objects.get(id=request.data['id'])
         except:
-            return not_found('Dicom')
-        dicom.project.add(project)
-        dicom.save()
-        result = Result.objects.create(project=project,dicoms=dicom,diag=None)
+            return not_found('Image')
+        image.project.add(project)
+        image.save()
+        result = Result.objects.create(project=project,images=image,diag=None,is_verified=0,note="")
         result.save()
         return Response(
             {
-                'message': 'Dicom added',
-                'result': DicomProjectSerializer(project, many=False).data,
+                'message': 'Image added',
+                'result': ImageProjectSerializer(project, many=False).data,
             },
             status=status.HTTP_200_OK
         )
     @action (detail=True, methods=['POST'],)
-    def remove_dicom(self, request, pk=None):
+    def remove_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -435,23 +444,23 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         try:
-            dicom = Dicom.objects.get(id=request.data['id'])
+            image = Image.objects.get(id=request.data['id'])
         except:
-            return not_found('Dicom')
-        result = Result.objects.get(project=project,dicoms=dicom)
+            return not_found('Image')
+        result = Result.objects.get(project=project,images=image)
         result.delete()
-        dicom.project.remove(project)
-        dicom.save()
+        image.project.remove(project)
+        image.save()
         return Response(
             {
-                'message': 'Dicom deleted',
-                'result': DicomProjectSerializer(project, many=False).data,
+                'message': 'Image deleted',
+                'result': ImageProjectSerializer(project, many=False).data,
             },
             status=status.HTTP_200_OK
         )        
         #edit result and save
     @action (detail=True, methods=['POST'],)
-    def edit_dicom(self, request, pk=None):
+    def edit_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -460,7 +469,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['diag_id','dicom_id'])
+        response = check_arguments(request.data, ['diag_id','image_id','note'])
         if response[0] != 0:
             return response[1]
         try:
@@ -468,29 +477,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Diag')
         try:
-            dicom = Dicom.objects.get(id=request.data['dicom_id'])
+            image = Image.objects.get(id=request.data['image_id'])
         except:
             return err_not_found
         try:
-            result = Result.objects.get(project=project,dicoms=dicom)
+            result = Result.objects.get(project=project,images=image)
         except:
             return not_found('Result')
         old = result.diag
         result.diag = diag
+        result.note = request.data['note']
+        result.is_verified = 2
         result.save()
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} edit {dicom.name} from {old} to {result.diag} ")
+                   desc=f"{request.user.username} edit {image.name} from {old} to {result.diag} ")
         return Response(
             {
-                'message': 'Dicom Uploaded',
+                'message': 'Image Uploaded',
                 'result': ResultSerializer(result, many=False).data,
             },
             status=status.HTTP_200_OK
         )
         #infer not finish na ja
     @action (detail=True, methods=['POST'],)
-    def infer_dicom(self, request, pk=None):
+    def infer_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -503,9 +514,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         try:
-            dicoms = Dicom.objects.filter(project=project)
+            images = Image.objects.filter(project=project)
         except:
-            return not_found('Dicom')
+            return not_found('Image')
         try:
             pipeline = Pipeline.objects.filter(project=project)
         except:
@@ -515,8 +526,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         tmp_path = "../media/tmp/"
         file_path = "../media/"
         os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
-        for dicom in dicoms:
-            os.symlink(file_path+dicom.data.name, tmp_path+dicom.data.name)
+        for image in images:
+            os.symlink(file_path+image.data.name, tmp_path+image.data.name)
         output1 = subprocess.check_output(
         f"clara create job -n {request.data['name']} -p {pipeline.pipeline_id} -f {tmp_path} ", 
         shell=True, 
@@ -533,8 +544,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 break
             else: time.sleep(1)
         output3 = subprocess.check_output(f"clara download {job}:/operators/{pipeline.name}/* {tmp_path} ", shell=True)
-        for dicom in dicoms:
-            os.unlink(tmp_path+dicom.data.name)
+        for image in images:
+            os.unlink(tmp_path+image.data.name)
         # not completed
         csvFilePath = tmp_path+'/Names.csv'
         jsonFilePath = tmp_path+'Names.json'
@@ -618,25 +629,25 @@ class PipelineViewSet(viewsets.ModelViewSet):
         )    
     
 
-class DicomViewSet(viewsets.ModelViewSet):
-    queryset = Dicom.objects.all()
-    serializer_class = DicomSerializer
+class ImageViewSet(viewsets.ModelViewSet):
+    queryset = Image.objects.all()
+    serializer_class = ImageSerializer
 
     def retrieve(self, request, pk=None):
         try:
-            dicom = Dicom.objects.get(id=pk)
+            image = Image.objects.get(id=pk)
         except:
-            return not_found('Dicom')
+            return not_found('Image')
 
-        serializer_class = DicomSerializer
-        return Response(serializer_class(dicom, many=False).data,
+        serializer_class = ImageDetailSerializer
+        return Response(serializer_class(image, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
         if not request.user.is_staff:
             return err_no_permission
-        queryset = Dicom.objects.all()
-        serializer_class = DicomSerializer
+        queryset = Image.objects.all()
+        serializer_class = ImageSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
     
@@ -647,30 +658,58 @@ class DicomViewSet(viewsets.ModelViewSet):
         
         name = request.data['name']
         data = request.data['data'] 
+        if not data.name.endswith('.dcm'):
+            return err_invalid_input
         try:
-            Dicom.objects.get(name=name)
+            Image.objects.get(name=name)
             return Response(
                 {'message': 'This name already exists'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            dicom = Dicom.objects.create(name=name,data=data)
+            
+            ds = pydicom.read_file(data)
+            patient_name = str(ds['PatientName'].value)
+            patient_id = str(ds['PatientID'].value)
+            physician_name = str(ds['ReferringPhysicianName'].value)
+            birth = int((ds['PatientBirthDate'].value)[:3])
+            patient_age = datetime.now().year - birth
+            content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d")
+            
+            img = ds.pixel_array
+            png_name = name+'.png'
+            imageio.imwrite(png_name, img)
+            
+            f= open(png_name,'rb')
+            data = File(f)
+            image = Image.objects.create(
+                name=name,
+                data=data,
+                patient_name=patient_name,
+                patient_id=patient_id,
+                patient_age=patient_age,
+                content_date=content_date,
+                physician_name=physician_name
+            )
+            f.close()
+            os.remove(png_name)
         try:
-            dicom.full_clean()
+            image.full_clean()
         except ValidationError as ve:
             print(ve)
-            dicom.delete()
+            image.delete()
             return Response(
                 str(ve),
                 status=status.HTTP_400_BAD_REQUEST
             )
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} upload {dicom.name} (dicom)  ")
+                   desc=f"{request.user.username} upload {image.name} (image)  ")
+        
         return Response(
             {
-                'message': 'Dicom Uploaded',
-                'result': DicomSerializer(dicom, many=False).data,
+                'message': 'Image Uploaded',
+                'result': ImageDetailSerializer(image, many=False).data,
             },
             status=status.HTTP_200_OK
         )
