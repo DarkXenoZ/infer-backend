@@ -652,38 +652,31 @@ class ImageViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_200_OK)
     
     def create(self, request, pk=None):
-        response = check_arguments(request.data, ['name','data',])
+        response = check_arguments(request.data, ['data',])
         if response[0] != 0:
             return response[1]
         
-        name = request.data['name']
+    
         data = request.data['data'] 
-        if not data.name.endswith('.dcm'):
+        if not data.name.lower().endswith('.dcm'):
             return err_invalid_input
-        try:
-            Image.objects.get(name=name)
-            return Response(
-                {'message': 'This name already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
+       
             
-            ds = pydicom.read_file(data)
-            patient_name = str(ds['PatientName'].value)
-            patient_id = str(ds['PatientID'].value)
-            physician_name = str(ds['ReferringPhysicianName'].value)
-            birth = int((ds['PatientBirthDate'].value)[:3])
-            patient_age = datetime.now().year - birth
-            content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d")
+        ds = pydicom.read_file(data)
+        patient_name = str(ds['PatientName'].value)
+        patient_id = str(ds['PatientID'].value)
+        physician_name = str(ds['ReferringPhysicianName'].value)
+        birth = int((ds['PatientBirthDate'].value)[:3])
+        patient_age = datetime.now().year - birth
+        content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d")
             
-            img = ds.pixel_array
-            png_name = name+'.png'
-            imageio.imwrite(png_name, img)
+        img = ds.pixel_array
+        png_name = data.name.replace('.dcm','.png')
+        imageio.imwrite(png_name, img)
             
-            f= open(png_name,'rb')
-            data = File(f)
-            image = Image.objects.create(
-                name=name,
+        f= open(png_name,'rb')
+        data = File(f)
+        image = Image.objects.create(
                 data=data,
                 patient_name=patient_name,
                 patient_id=patient_id,
@@ -691,8 +684,8 @@ class ImageViewSet(viewsets.ModelViewSet):
                 content_date=content_date,
                 physician_name=physician_name
             )
-            f.close()
-            os.remove(png_name)
+        f.close()
+        os.remove(png_name)
         try:
             image.full_clean()
         except ValidationError as ve:
@@ -704,7 +697,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             )
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} upload {image.name} (image)  ")
+                   desc=f"{request.user.username} upload {image.data.name} (image)  ")
         
         return Response(
             {

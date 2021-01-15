@@ -18,7 +18,7 @@ class LogSerializer(serializers.ModelSerializer):
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ('id','name', 'data','patient_name','patient_id')
+        fields = ('id', 'data','patient_name','patient_id')
 
 
 class OnlyUserSerializer(serializers.ModelSerializer):
@@ -87,4 +87,4 @@ class UserProjectSerializer(serializers.ModelSerializer):
 class ImageDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ('id','name', 'data','patient_name','patient_id','patient_age','physician_name','content_date')
+        fields = ('id', 'data','patient_name','patient_id','patient_age','physician_name','content_date')

@@ -57,7 +57,6 @@ class Pipeline(models.Model):
         unique_together = ('pipeline_id',)
 
 class Image(models.Model):
-    name = models.CharField(max_length=50)
     data = models.FileField(upload_to='image/')
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
@@ -73,10 +72,9 @@ class Image(models.Model):
         blank=True,
     )
     def __str__(self):
-        return self.name
+        return self.data.name
     
-    class Meta:
-        unique_together = ('name',)
+
     
 
 class Result(models.Model):
