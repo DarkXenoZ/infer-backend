@@ -666,7 +666,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         patient_name = str(ds['PatientName'].value)
         patient_id = str(ds['PatientID'].value)
         physician_name = str(ds['ReferringPhysicianName'].value)
-        birth = int((ds['PatientBirthDate'].value)[:3])
+        birth = int((ds['PatientBirthDate'].value)[:4])
         patient_age = datetime.now().year - birth
         content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d")
             
