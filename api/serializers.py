@@ -47,7 +47,7 @@ class ResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Result
-        fields = ('project','images','diag')
+        fields = ('project','images','diag','note')
 
 class ResultNoProjectSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=False)
@@ -62,7 +62,7 @@ class ImageProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('id','name','description','pipeline','result')
+        fields = ('id','name','description','result')
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
