@@ -261,6 +261,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'name',
             'description',
             'task',
+            'cover'
         ])
         if response[0] != 0:
             return response[1]
@@ -268,8 +269,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         name = request.data['name']
         description = request.data['description']
         task = (request.data['task']).lower()
-        if not Project.check_task(task):
+        if not Project.check_task(self,task):
             return err_invalid_input
+        cover = request.data['cover']
         try:
             Project.objects.get(name=name)
             return Response(
@@ -277,7 +279,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            new_project = Project.objects.create(name=name, description=description,task=task)
+            new_project = Project.objects.create(name=name, description=description,task=task,cover=cover)
         try:
             new_project.full_clean()
         except ValidationError as ve:

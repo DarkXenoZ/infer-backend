@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator, \
 
 # Class project
 class Project(models.Model):
+    cover = models.ImageField(upload_to='cover/',null=True)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
     task = models.CharField(max_length=50)
@@ -46,7 +47,6 @@ class Pipeline(models.Model):
         Project,
         related_name='pipelines',
         default=None,
-        null=True,
         blank=True,
     )
     def __str__(self):
@@ -56,7 +56,7 @@ class Pipeline(models.Model):
         unique_together = ('pipeline_id',)
 
 class Image(models.Model):
-    data = models.FileField(upload_to='image/')
+    data = models.ImageField(upload_to='image/')
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -66,7 +66,6 @@ class Image(models.Model):
         Project,
         related_name='images',
         default=None,
-        null=True,
         blank=True,
     )
     def __str__(self):

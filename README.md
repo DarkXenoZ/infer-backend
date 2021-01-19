@@ -30,7 +30,7 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/user/<username>/project/
 	POST	/api/user/<username>/change_password	(password)
 	GET	/api/project/
-	POST	/api/project/	(name,description,task)
+	POST	/api/project/	(name,description,task,cover)
 	GET	/api/project/<project_id>/
 	DELETE	/api/project/<project_id>/remove_user/	(username)
 	POST	/api/project/<project_id>/add_image/		(id)

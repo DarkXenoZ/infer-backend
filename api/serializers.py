@@ -38,7 +38,7 @@ class UserLogSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name','description','task')
+        fields = ('id','name','description','task','cover')
 
 class ResultSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(many=False)
@@ -82,7 +82,7 @@ class UserProjectSerializer(serializers.ModelSerializer):
     pipelines =PipelineSerializer(many=True)
     class Meta:
         model = Project
-        fields = ('id','name','description','pipelines','users','task')
+        fields = ('id','name','description','pipelines','users','task','cover')
 
 class ImageDetailSerializer(serializers.ModelSerializer):
     class Meta:
