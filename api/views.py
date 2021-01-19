@@ -661,51 +661,35 @@ class ImageViewSet(viewsets.ModelViewSet):
         if not data.name.lower().endswith('.dcm'):
             return err_invalid_input
        
-            
+        
         ds = pydicom.read_file(data)
-        patient_name = str(ds['PatientName'].value)
-        patient_id = str(ds['PatientID'].value)
-        physician_name = str(ds['ReferringPhysicianName'].value)
+        imgs={}
+        imgs['patient_name']= str(ds['PatientName'].value)
+        imgs['patient_id'] = str(ds['PatientID'].value)
+        imgs['physician_name'] = str(ds['ReferringPhysicianName'].value)
         birth = int((ds['PatientBirthDate'].value)[:4])
-        patient_age = datetime.now().year - birth
-        content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d")
+        imgs['patient_age'] = datetime.now().year - birth
+        imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
             
         img = ds.pixel_array
         png_name = data.name.replace('.dcm','.png')
         imageio.imwrite(png_name, img)
             
         f= open(png_name,'rb')
-        data = File(f)
-        image = Image.objects.create(
-                data=data,
-                patient_name=patient_name,
-                patient_id=patient_id,
-                patient_age=patient_age,
-                content_date=content_date,
-                physician_name=physician_name
-            )
-        f.close()
-        os.remove(png_name)
-        try:
-            image.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            image.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
-        create_log(user=request.user,
-                   desc=f"{request.user.username} upload {image.data.name} (image)  ")
+        imgs['data'] = File(f)
+        img_serializer = ImageSerializer(data=imgs)
+        if img_serializer.is_valid():
+            img_serializer.save()
+            f.close()
+            os.remove(png_name)
         
-        return Response(
-            {
-                'message': 'Image Uploaded',
-                'result': ImageDetailSerializer(image, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )
+            create_log(user=request.user,
+                    desc=f"{request.user.username} upload Dicom ")
+            return Response(img_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print('error', img_serializer.errors)
+            return Response(img_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class DiagViewSet(viewsets.ModelViewSet):
     queryset = Diag.objects.all()
