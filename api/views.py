@@ -218,17 +218,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         result = Result.objects.filter(project=project)
+        print(result)
         diag_list ={}
         status_count=[0,0,0]
         for each in result:
             status_count[each.is_verified]+=1
-            if each.diag == None:
+            print(each.diag is None)
+            if each.diag is None:
                 pass
-            diag = each.diag.name
-            if diag not in diag_list:
-                diag_list[diag] = 1
             else:
-                diag_list[diag]+= 1
+                diag = each.diag.name
+                if diag not in diag_list:
+                    diag_list[diag] = 1
+                else:
+                    diag_list[diag]+= 1
         total = sum(diag_list.values())
         for i in diag_list: 
             diag_list[i] = diag_list[i]/total
@@ -353,7 +356,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-    @action(detail=True, methods=['POST'], )    
+    @action(detail=True, methods=['DELETE'], )    
     def remove_user(self, request,pk=None):
         try:
             project = Project.objects.get(id=pk)
@@ -419,18 +422,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
             image = Image.objects.get(id=request.data['id'])
         except:
             return not_found('Image')
-        image.project.add(project)
-        image.save()
-        result = Result.objects.create(project=project,images=image,diag=None,is_verified=0,note="")
-        result.save()
-        return Response(
-            {
-                'message': 'Image added',
-                'result': ImageProjectSerializer(project, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )
-    @action (detail=True, methods=['POST'],)
+        try:
+            image.project.get(name=project)
+            return Response(
+                {'message': "This Image already exist"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            image.project.add(project)
+            image.save()
+            result = Result.objects.create(project=project,images=image,diag=None,is_verified=0,note="")
+            result.save()
+            return Response(
+                {
+                    'message': 'Image added',
+                    'result': ImageProjectSerializer(project, many=False).data,
+                },
+                status=status.HTTP_200_OK
+            )
+    @action (detail=True, methods=['DELETE'],)
     def remove_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
@@ -459,7 +469,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )        
         #edit result and save
-    @action (detail=True, methods=['POST'],)
+    @action (detail=True, methods=['PUT'],)
     def edit_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
@@ -491,7 +501,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         result.save()
             # return err_invalid_input
         create_log(user=request.user,
-                   desc=f"{request.user.username} edit {image.name} from {old} to {result.diag} ")
+                   desc=f"{request.user.username} edit {image.data.name} from {old} to {result.diag} ")
         return Response(
             {
                 'message': 'Image Uploaded',
@@ -685,7 +695,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         
             create_log(user=request.user,
                     desc=f"{request.user.username} upload Dicom ")
-            return Response(img_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(img_serializer.data, status=status.HTTP_200_OK)
         else:
             print('error', img_serializer.errors)
             return Response(img_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
