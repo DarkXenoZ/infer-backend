@@ -6,7 +6,8 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	
 	$ pip install django==3.1
 	$ pip install djangorestframework
-	$ pip install django-cors-headers==3.6.0
+	$ pip install django-cors-headers==3.6.
+	$ pip install psycopg2
 	$ python3 manage.py runserver
 
 ## Usage
@@ -29,9 +30,10 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/user/<username>/
 	GET	/api/user/<username>/project/
 	POST	/api/user/<username>/change_password	(password)
-	GET	/api/project/
+	GET	/api/project/	
 	POST	/api/project/	(name,description,task,cover)
 	GET	/api/project/<project_id>/
+	POST	/api/project/<project_id>/add_user/		(username)	
 	DELETE	/api/project/<project_id>/remove_user/	(username)
 	POST	/api/project/<project_id>/add_image/		(id)
 	DELETE	/api/project/<project_id>/remove_image/	(id)
