@@ -8,7 +8,7 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	$ pip install djangorestframework
 	$ pip install django-cors-headers==3.6.0
 	$ pip install psycopg2
-	$ pip install pydicom,imageio,
+	$ pip install pydicom,imageio,opencv-python
 	$ python3 manage.py runserver
 
 ## Usage
