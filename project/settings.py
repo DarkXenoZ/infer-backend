@@ -98,7 +98,10 @@ if os.environ.get('DB_HOST'):
     DATABASES['default']['HOST'] = os.environ.get('DB_HOST')
 if os.environ.get('POSTGRES_PASSWORD'):
     DATABASES['default']['PASSWORD'] = os.environ.get('POSTGRES_PASSWORD')
-
+if os.environ.get('POSTGRES_DB'):
+    DATABASES['default']['NAME'] = os.environ.get('POSTGRES_DB')
+if os.environ.get('POSTGRES_USER'):
+    DATABASES['default']['USER'] = os.environ.get('POSTGRES_USER')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
