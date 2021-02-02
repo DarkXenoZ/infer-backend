@@ -94,6 +94,8 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+if os.environ.get('DB_HOST'):
+    DATABASES['default']['HOST'] = os.environ.get('DB_HOST')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
