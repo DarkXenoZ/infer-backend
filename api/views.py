@@ -19,7 +19,7 @@ import os
 from django.http import HttpResponse
 
 err_invalid_input = Response(
-    {'message': 'Cannot create user, please recheck input fields'},
+    {'message': 'please recheck input fields'},
     status=status.HTTP_400_BAD_REQUEST,
 )
 err_no_permission = Response(
@@ -43,8 +43,6 @@ def not_found(Object):
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
 
 def check_arguments(request_arr, args):
     # check for missing arguments
@@ -136,7 +134,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return err_not_found
 
-    @action(methods=['POST'], detail=True)
+    @action(methods=['PUT'], detail=True)
     def change_password(self, request, pk=None):
         if pk != request.user.username and not request.user.is_staff:
             return err_no_permission
@@ -217,17 +215,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        result = Result.objects.filter(project=project)
-        print(result)
+        images = Image.objects.filter(project=project)
         diag_list ={}
-        status_count=[0,0,0]
-        for each in result:
-            status_count[each.is_verified]+=1
-            print(each.diag is None)
-            if each.diag is None:
+        status_count=[0,0,0,0]
+        for each in images:
+            status_count[each.status]+=1
+            if each.actual_class == '' :
                 pass
             else:
-                diag = each.diag.name
+                diag = each.actual_class
                 if diag not in diag_list:
                     diag_list[diag] = 1
                 else:
@@ -239,11 +235,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'project': UserProjectSerializer(project, many=False).data,
-                'result' : ResultNoProjectSerializer(result,many=True).data,
                 'predicted': diag_list,
-                'in process': status_count[0],
-                'ai-annotated' : status_count[1],
-                'verified' : status_count[2],
+                'uploaded' : status_count[0],
+                'in process': status_count[1],
+                'ai-annotated' : status_count[2],
+                'verified' : status_count[3],
+                'result' : ImageSerializer(images,many=True).data,
             },
             status=status.HTTP_200_OK
         )
@@ -261,17 +258,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'name',
             'description',
             'task',
-            'cover'
+            'cover',
+            'predclasses'
         ])
         if response[0] != 0:
             return response[1]
 
-        name = request.data['name']
-        description = request.data['description']
-        task = (request.data['task']).lower()
-        if not Project.check_task(self,task):
-            return err_invalid_input
-        cover = request.data['cover']
+        name = str(request.data['name'])
+        # description = request.data['description']
+        # cover = request.data['cover']
+        # task = request.data['task']
+        # pred = request.data['predClasses']
+ 
         try:
             Project.objects.get(name=name)
             return Response(
@@ -279,48 +277,34 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            new_project = Project.objects.create(name=name, description=description,task=task,cover=cover)
-        try:
-            new_project.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            new_project.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
+            project_serializer = ProjectSerializer(data=request.data)
+            if project_serializer.is_valid():
+                project_serializer.save() 
+            else:
+                return err_invalid_input  
         create_log(user=request.user,
-                   desc=f"Project: {new_project.name} has been created by {request.user.username}" )
+                   desc=f"Project: {name} has been created by {request.user.username}" )
         return Response(
             {
                 'message': 'The Project has been created',
-                'result': UserProjectSerializer(new_project, many=False).data,
+                'result': (project_serializer).data,
             },
             status=status.HTTP_200_OK
         )
 
-    @action(detail=True, methods=['POST'], )    
-    def change_pipeline(self, request, pk=None):
+    @action(detail=True, methods=['GET'], )    
+    def list_pipeline(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        if not request.user.is_staff:
-            return err_no_permission
-        response = check_arguments(request.data, ['id',])
-        if response[0] != 0:
-            return response[1]
         try:
-            pipeline = Pipeline.objects.get(id=request.data['id'])
+            pipeline = Pipeline.objects.filter(project=project)
         except:
             return not_found('Pipeline')
-        pipeline.project.add(project)
-        pipeline.save()
         return Response(
             {
-                'message': 'Changed',
-                'result': ProjectSerializer(project, many=False).data,
+                'result': PipelineSerializer(pipeline, many=True).data,
             },
             status=status.HTTP_200_OK
         )
@@ -385,6 +369,54 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+    @action (detail=True, methods=['POST'],)
+    def add_pipeline(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        response = check_arguments(request.data, ['name','pipeline_id','description'])
+        if response[0] != 0:
+            return response[1]
+        
+        name = request.data['name']
+        pipeline_id = request.data['pipeline_id']
+        desc = request.data['description']
+        try:
+            Pipeline.objects.get(name=name)
+            return Response(
+                {'message': 'This name already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            pass
+        try:
+            Pipeline.objects.get(pipeline_id=pipeline_id)
+            return Response(
+                {'message': 'This pipeline_id already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project)
+        try:
+            pipeline.full_clean()
+        except ValidationError as ve:
+            print(ve)
+            pipeline.delete()
+            return Response(
+                str(ve),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            # return err_invalid_input
+        create_log(user=request.user,
+                   desc=f"{request.user.username} create {pipeline.name} (pipeline) ")
+        return Response(
+            {
+                'message': 'Pipeline created',
+                'result': PipelineSerializer(pipeline, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
 
     @action (detail=True, methods=['GET'],)
     def list_image(self, request, pk=None):
@@ -408,7 +440,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_200_OK)
         #add dicoom to project
     @action (detail=True, methods=['POST'],)
-    def add_image(self, request, pk=None):
+    def upload_dicom(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -417,27 +449,42 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['id',])
+        response = check_arguments(request.data, ['dicom',])
         if response[0] != 0:
             return response[1]
-        try:
-            image = Image.objects.get(id=request.data['id'])
-        except:
-            return not_found('Image')
-        try:
-            image.project.get(name=project)
-            return Response(
-                {'message': "This Image already exist"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
-            image.project.add(project)
-            image.save()
-            result = Result.objects.create(project=project,images=image,diag=None,is_verified=0,note="")
-            result.save()
-            return Response(
+        if not request.data['dicom'].name.lower().endswith('.dcm'):
+            return err_invalid_input
+        
+        ds = pydicom.read_file(request.data['dicom'])
+        imgs={}
+        imgs['patient_name']= str(ds['PatientName'].value)
+        imgs['patient_id'] = str(ds['PatientID'].value)
+        imgs['physician_name'] = str(ds['ReferringPhysicianName'].value)
+        birth = int((ds['PatientBirthDate'].value)[:4])
+        imgs['patient_age'] = datetime.now().year - birth
+        imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
+            
+        img = ds.pixel_array
+        png_name = request.data['dicom'].name.replace('.dcm','.png')
+        imageio.imwrite(png_name, img)
+            
+        f= open(png_name,'rb')
+        imgs['data8'] = File(f)
+        imgs['data16'] = File(f)
+        imgs['status'] = 0
+        imgs['project'] = project.pk
+        img_serializer = UploadImageSerializer(data=imgs)
+        if img_serializer.is_valid():
+            img_serializer.save()
+            f.close()
+            os.remove(png_name)    
+        else:
+            f.close()
+            os.remove(png_name)
+            return Response({'message':img_serializer.errors},) 
+        return Response(
                 {
-                    'message': 'Image added',
+                    'message': 'Image uploaded',
                     'result': ImageProjectSerializer(project, many=False).data,
                 },
                 status=status.HTTP_200_OK
@@ -459,10 +506,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             image = Image.objects.get(id=request.data['id'])
         except:
             return not_found('Image')
-        result = Result.objects.get(project=project,images=image)
-        result.delete()
-        image.project.remove(project)
-        image.save()
+        image.delete()
         return Response(
             {
                 'message': 'Image deleted',
@@ -472,7 +516,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )        
         #edit result and save
     @action (detail=True, methods=['PUT'],)
-    def edit_image(self, request, pk=None):
+    def verify_image(self, request, pk=None):
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -481,33 +525,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['diag_id','image_id','note'])
+        response = check_arguments(request.data, ['id','actual_class','note'])
         if response[0] != 0:
             return response[1]
         try:
-            diag = Diag.objects.get(id=request.data['diag_id'])
-        except:
-            return not_found('Diag')
-        try:
-            image = Image.objects.get(id=request.data['image_id'])
+            image = Image.objects.get(id=request.data['id'])
         except:
             return err_not_found
-        try:
-            result = Result.objects.get(project=project,images=image)
-        except:
-            return not_found('Result')
-        old = result.diag
-        result.diag = diag
-        result.note = request.data['note']
-        result.is_verified = 2
-        result.save()
-            # return err_invalid_input
+        if request.data['actual_class'] not in project.predclasses:
+            return not_found('predClass')
+        image.actual_class = request.data['actual_class']
+        image.status = 3
+        image.timestamp = datetime.now()
+        image.verify_by = f'{user.first_name} {user.last_name}'
+        image.save()
         create_log(user=request.user,
-                   desc=f"{request.user.username} edit {image.data.name} from {old} to {result.diag} ")
+                   desc=f"{request.user.username} verify {image.data8.name}")
         return Response(
             {
-                'message': 'Image Uploaded',
-                'result': ResultSerializer(result, many=False).data,
+                'message': 'Image Verified',
+                'result': ImageSerializer(image, many=False).data,
             },
             status=status.HTTP_200_OK
         )
@@ -598,47 +635,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_200_OK)
 
     def create(self, request, pk=None):
-        response = check_arguments(request.data, ['name','id'])
-        if response[0] != 0:
-            return response[1]
-        
-        name = request.data['name']
-        pipeline_id = request.data['id']
-        try:
-            Pipeline.objects.get(name=name)
-            return Response(
-                {'message': 'This name already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
-            pass
-        try:
-            Pipeline.objects.get(pipeline_id=pipeline_id)
-            return Response(
-                {'message': 'This pipeline_id already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
-            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id)
-        try:
-            pipeline.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            pipeline.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
-        create_log(user=request.user,
-                   desc=f"{request.user.username} create {pipeline.name} (pipeline) ")
-        return Response(
-            {
-                'message': 'Pipeline created',
-                'result': PipelineSerializer(pipeline, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )    
+        return err_not_allowed
     
 
 class ImageViewSet(viewsets.ModelViewSet):
@@ -651,7 +648,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Image')
 
-        serializer_class = ImageDetailSerializer
+        serializer_class = ImageSerializer
         return Response(serializer_class(image, many=False).data,
                         status=status.HTTP_200_OK, )       
     
@@ -664,95 +661,28 @@ class ImageViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_200_OK)
     
     def create(self, request, pk=None):
-        response = check_arguments(request.data, ['data',])
-        if response[0] != 0:
-            return response[1]
-        
-    
-        data = request.data['data'] 
-        if not data.name.lower().endswith('.dcm'):
-            return err_invalid_input
-       
-        
-        ds = pydicom.read_file(data)
-        imgs={}
-        imgs['patient_name']= str(ds['PatientName'].value)
-        imgs['patient_id'] = str(ds['PatientID'].value)
-        imgs['physician_name'] = str(ds['ReferringPhysicianName'].value)
-        birth = int((ds['PatientBirthDate'].value)[:4])
-        imgs['patient_age'] = datetime.now().year - birth
-        imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
-            
-        img = ds.pixel_array
-        png_name = data.name.replace('.dcm','.png')
-        imageio.imwrite(png_name, img)
-            
-        f= open(png_name,'rb')
-        imgs['data'] = File(f)
-        img_serializer = ImageSerializer(data=imgs)
-        if img_serializer.is_valid():
-            img_serializer.save()
-            f.close()
-            os.remove(png_name)
-        
-            create_log(user=request.user,
-                    desc=f"{request.user.username} upload Dicom ")
-            return Response(img_serializer.data, status=status.HTTP_200_OK)
-        else:
-            print('error', img_serializer.errors)
-            return Response(img_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return err_not_allowed
     
 
-class DiagViewSet(viewsets.ModelViewSet):
-    queryset = Diag.objects.all()
-    serializer_class = DiagSerializer
+class PredictResultViewSet(viewsets.ModelViewSet):
+    queryset = PredictResult.objects.all()
+    serializer_class = PredictResultSerializer
 
     def retrieve(self, request, pk=None):
         try:
-            diag = Diag.objects.get(id=pk)
+            result = Diag.objects.get(id=pk)
         except:
-            return not_found('Diag')
+            return not_found('PredictResult')
 
-        serializer_class = DiagSerializer
-        return Response(serializer_class(diag, many=False).data,
+        serializer_class = PredictResultSerializer
+        return Response(serializer_class(result, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
-        queryset = Diag.objects.all()
-        serializer_class = DiagSerializer
+        queryset = PredictResult.objects.all()
+        serializer_class = PredictResultSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
     
     def create(self, request, pk=None):
-        response = check_arguments(request.data, ['name',])
-        if response[0] != 0:
-            return response[1]
-        
-        name = request.data['name']
-        try:
-            Diag.objects.get(name=name)
-            return Response(
-                {'message': 'This name already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
-            diag = Diag.objects.create(name=name)
-        try:
-            diag.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            diag.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
-        create_log(user=request.user,
-                   desc=f"{request.user.username} create {diag.name} (diag) ")
-        return Response(
-            {
-                'message': 'Diag created',
-                'result': DiagSerializer(diag, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )    
+       return err_not_allowed

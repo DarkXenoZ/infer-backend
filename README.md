@@ -30,22 +30,21 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	POST	/api/user/		(username,password,first_name,last_name,email)
 	GET	/api/user/<username>/
 	GET	/api/user/<username>/project/
-	POST	/api/user/<username>/change_password	(password)
+	PUT	/api/user/<username>/change_password	(password)
 	GET	/api/project/	
-	POST	/api/project/	(name,description,task,cover)
+	POST	/api/project/	(name,description,task,cover,predclasses) predclasses ex : covid,normal
 	GET	/api/project/<project_id>/
 	POST	/api/project/<project_id>/add_user/		(username)	
 	DELETE	/api/project/<project_id>/remove_user/	(username)
-	POST	/api/project/<project_id>/add_image/		(id)
+	GET	/api/project/<project_id>/list_pipeline/	(id)
+	POST	/api/project/<project_id>/add_pipeline/	(name,pipeline_id,description)
+	POST	/api/project/<project_id>/upload_dicom/		(dicom)
 	DELETE	/api/project/<project_id>/remove_image/	(id)
-	PUT	/api/project/<project_id>/edit_image/	(image_id,diag_id,note)
+	PUT	/api/project/<project_id>/verify_image/	(id,actual_class,note)
 	GET	/api/project/<project_id>/list_image/
 	GET	/api/pipeline/
 	GET	/api/pipeline/<pipeline_id>
-	POST	/api/pipeline/	(name,id)
 	GET	/api/image/
 	GET	/api/image/<image_id>
-	POST	/api/image/		(data)
-	GET	/api/diag/
-	GET	/api/diag/<diag_id>
-	POST	/api/diag/		(name)
+	*GET	/api/predictResult/
+	*GET	/api/predictResult/<predictResult_id>

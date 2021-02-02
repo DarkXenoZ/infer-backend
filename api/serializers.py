@@ -3,28 +3,30 @@ from .models import *
 
 
 
-class DiagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Diag
-        fields = ('id','name',)
 
 
 class LogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Log
-        fields = ('desc', 'timestamp',)
+        fields = ("desc", "timestamp",)
 
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ('id', 'data','patient_name','patient_id','patient_age','content_date','physician_name')
+        fields = (
+            "id", "data8","data16",
+            "patient_name","patient_id",
+            "patient_age","content_date",
+            "physician_name","status",
+            "actual_class","verify_by","timestamp"
+            )
 
 
 class OnlyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username','first_name')
+        fields = ("username","first_name")
 
 
 class UserLogSerializer(serializers.ModelSerializer):
@@ -32,59 +34,51 @@ class UserLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'logs',)
+        fields = ("username", "logs",)
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name','description','task','cover')
+        fields = ("id","name","description","task","cover","predclasses")
 
-class ResultSerializer(serializers.ModelSerializer):
-    project = ProjectSerializer(many=False)
-    images = ImageSerializer(many=False)
-    diag = DiagSerializer(many=False)
-
-    class Meta:
-        model = Result
-        fields = ('project','images','diag','note')
-
-class ResultNoProjectSerializer(serializers.ModelSerializer):
-    images = ImageSerializer(many=False)
-    diag = DiagSerializer(many=False)
-
-    class Meta:
-        model = Result
-        fields = ('images','diag')
-
-class ImageProjectSerializer(serializers.ModelSerializer):
-    result = ResultNoProjectSerializer(many=True)
-
+class createProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id','name','description','result')
+        fields = ("id","name","description","task","cover","predclasses")
+class PredictResultSerializer(serializers.ModelField):
+    image = ImageSerializer(many=False)
+    class Meta:
+        model = PredictResult
+        fields = ("predicted_class","image","pipeline","timestamp")
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name','email','projects')
+        fields = ("username", "first_name", "last_name","email","projects")
 
 
 class PipelineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pipeline
-        fields = ('id','name','pipeline_id')
+        fields = ("id","name","pipeline_id")
 
 class UserProjectSerializer(serializers.ModelSerializer):
     users = OnlyUserSerializer(many=True)
-    pipelines =PipelineSerializer(many=True)
     class Meta:
         model = Project
-        fields = ('id','name','description','pipelines','users','task','cover')
+        fields = ("id","name","description","users","task","predclasses")
 
-class ImageDetailSerializer(serializers.ModelSerializer):
+class UploadImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ('id', 'data','patient_name','patient_id','patient_age','physician_name','content_date')
+        fields = ("project","data8","data16","patient_name","patient_id","patient_age","content_date","physician_name","status")
+
+
+class ImageProjectSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    class Meta:
+        model = Project
+        fields = ("id","name","images")

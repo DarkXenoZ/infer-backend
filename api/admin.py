@@ -4,6 +4,5 @@ from .models import *
 admin.site.register(Project)
 admin.site.register(Log)
 admin.site.register(Image)
-admin.site.register(Diag)
 admin.site.register(Pipeline)
-admin.site.register(Result)
+admin.site.register(PredictResult)

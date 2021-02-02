@@ -9,7 +9,7 @@ router.register('log', LogViewSet)
 router.register('image', ImageViewSet)
 router.register('project', ProjectViewSet)
 router.register('pipeline', PipelineViewSet)
-router.register('diag', DiagViewSet)
+router.register('predictResult', PredictResultViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
