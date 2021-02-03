@@ -29,9 +29,9 @@ else:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
-
+if os.environ.get('ALLOWED_HOST'):
+    ALLOWED_HOSTS.append( os.environ.get('ALLOWED_HOST') )
 
 # Application definition
 
