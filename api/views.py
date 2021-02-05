@@ -635,11 +635,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['image_ids',])
+        response = check_arguments(request.data, ['image_ids','pipeline'])
         if response[0] != 0:
             return response[1]
         try:
-            pipeline = Pipeline.objects.filter(project=project)
+            pipeline = Pipeline.objects.get(id=request.data['pipeline'])
         except:
             return not_found('Pipeline')
         images = []
@@ -658,7 +658,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             img_name = img.split('/')[-1]
             os.symlink(file_path+img, tmp_path+img_name)
         output1 = subprocess.check_output(
-            f"sudo clara create job -n {user.username} {project.name} -p {project.pipeline.pipeline_id} -f {tmp_path} ", 
+            f"sudo clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
             shell=True, 
             encoding='UTF-8'
         )
