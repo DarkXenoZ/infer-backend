@@ -26,11 +26,6 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
-    def check_task(self,task):
-        valid_task = ['Classification','Segmentation']
-        if task in valid_task:
-            return True
-        return False
     
     class Meta:
         unique_together = ('name',)
@@ -38,6 +33,7 @@ class Project(models.Model):
 class Pipeline(models.Model):
     name = models.CharField(max_length=50)
     pipeline_id = models.CharField(max_length=40,default="Empty")
+    operator =  models.CharField(max_length=50)
     accuracy = models.FloatField(blank=True,default=0.0)
     description = models.CharField(max_length=500,default='')
     project = models.ForeignKey(
@@ -61,6 +57,7 @@ class Pair(models.Model):
         return (self.x,self.y)
     
 class Image(models.Model):
+    name = models.CharField(max_length=50)
     data8 = models.FileField(upload_to='image8/')
     data16 = models.FileField(upload_to='image16/')
     patient_name = models.CharField(max_length=50)
@@ -83,6 +80,7 @@ class Image(models.Model):
     
     def __str__(self):
         return self.data8.name
+
     
 
 class PredictResult(models.Model):
@@ -101,7 +99,19 @@ class PredictResult(models.Model):
         on_delete=models.CASCADE,
     )
     
-
+class Queue(models.Model):
+    #JOB_ID Queue
+    job= models.CharField(max_length=50)
+    project = models.ForeignKey(
+        Project,
+        related_name='queue',
+        on_delete=models.CASCADE,
+    )
+    pipeline = models.ForeignKey(
+        Pipeline,
+        related_name='queue',
+        on_delete=models.CASCADE,
+    )
 
 class Log(models.Model):
     user = models.ForeignKey(
