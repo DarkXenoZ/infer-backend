@@ -15,7 +15,7 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = (
-            "id", "data8","data16",
+            "id","name","data8","data16",
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
@@ -63,7 +63,7 @@ class PipelineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pipeline
-        fields = ("id","name","pipeline_id")
+        fields = ("id","name","pipeline_id","operator")
 
 class UserProjectSerializer(serializers.ModelSerializer):
     users = OnlyUserSerializer(many=True)
@@ -74,7 +74,7 @@ class UserProjectSerializer(serializers.ModelSerializer):
 class UploadImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ("project","data8","data16","patient_name","patient_id","patient_age","content_date","physician_name","status")
+        fields = ("project","name","data8","data16","patient_name","patient_id","patient_age","content_date","physician_name","status")
 
 
 class ImageProjectSerializer(serializers.ModelSerializer):
@@ -82,3 +82,5 @@ class ImageProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ("id","name","images")
+
+
