@@ -7,13 +7,11 @@ from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 from .serializers import *
 from django.core.files.storage import FileSystemStorage
-import subprocess
-import time
 import pydicom
 import imageio
 from datetime import datetime
 from django.core.files import File
-import os
+import subprocess, os, time, json, csv
 
 # Create your views here.
 from django.http import HttpResponse
@@ -375,13 +373,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        response = check_arguments(request.data, ['name','pipeline_id','description'])
+        response = check_arguments(request.data, ['name','pipeline_id','description','operator'])
         if response[0] != 0:
             return response[1]
         
         name = request.data['name']
         pipeline_id = request.data['pipeline_id']
         desc = request.data['description']
+        operator = request.data['operator']
         try:
             Pipeline.objects.get(name=name)
             return Response(
@@ -397,7 +396,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project)
+            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project,operator=operator)
         try:
             pipeline.full_clean()
         except ValidationError as ve:
@@ -435,10 +434,40 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 {'message': "Empty project"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer_class = ImageProjectSerializer
-        return Response(serializer_class(project, many=False).data,
+        try:
+            images_in_process = Image.objects.filter(project=project,status=1)
+            queue = Queue.objects.filter(project=project)
+            for q in queue:
+                check = subprocess.check_output(f"sudo clara describe job -j {job} ", shell=True, encoding='UTF-8')
+                line_check = (check.split('\n'))[9]
+                state = (line_check.split(':'))[1].strip()
+                if "1" in status:
+                    output = subprocess.check_output(
+                        f"sudo clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
+                        shell=True, 
+                        encoding='UTF-8'
+                    )
+                    with open("tmp.csv", 'r') as f: 
+                        csvReader = csv.reader(f) 
+                        for rows in csvReader: 
+                            pred = {}
+                            for result in rows[1:]:
+                                diag, precision = result.split(":")
+                                pred[diag]=precision
+                            pred=json.dumps(pred)
+                            name = rows[0].split("/")[-1]
+                            img = Image.objects.get(name=name)
+                            img.status= 2
+                            img.save()
+                            predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
+                            predResult.save()
+                    os.remove("tmp.csv")
+            return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
-        #add dicoom to project
+        except:
+            return Response(ImageProjectSerializer(project, many=False).data,
+                        status=status.HTTP_200_OK)
+
     @action (detail=True, methods=['POST'],)
     def upload_dicom(self, request, pk=None):
         try:
@@ -466,6 +495,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             
         img = ds.pixel_array
         png_name = request.data['dicom'].name.replace('.dcm','.png')
+        imgs['name']=png_name
         imageio.imwrite(png_name, img)
             
         f= open(png_name,'rb')
@@ -489,6 +519,52 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK
             )
+
+    @action (detail=True, methods=['POST'],)
+    def upload_image(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        try:
+            user = project.users.get(username=request.user.username)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, [
+            'image',
+            'patient_name',
+            'patient_id',
+            'physician_name',
+            'patient_age',
+            'content_date'
+            ]
+        )
+        if response[0] != 0:
+            return response[1]
+        imgs={}
+        imgs['patient_name']= request.data['patient_name']
+        imgs['patient_id'] =  request.data['patient_id']
+        imgs['physician_name'] =  request.data['physician_name']
+        imgs['patient_age'] =  request.data['patient_age']
+        imgs['content_date'] = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
+        imgs['data8'] = request.data['image']
+        imgs['data16'] = request.data['image']
+        imgs['name'] = request.data['image'].name
+        imgs['status'] = 0
+        imgs['project'] = project.pk
+        img_serializer = UploadImageSerializer(data=imgs)
+        if img_serializer.is_valid():
+            img_serializer.save() 
+        else:
+            return Response({'message':img_serializer.errors},) 
+        return Response(
+                {
+                    'message': 'Image uploaded',
+                    'result': ImageProjectSerializer(project, many=False).data,
+                },
+                status=status.HTTP_200_OK
+            )
+
     @action (detail=True, methods=['DELETE'],)
     def remove_image(self, request, pk=None):
         try:
@@ -559,57 +635,51 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = project.users.get(username=request.user.username)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['id',])
+        response = check_arguments(request.data, ['image_ids',])
         if response[0] != 0:
             return response[1]
-        try:
-            images = Image.objects.filter(project=project)
-        except:
-            return not_found('Image')
         try:
             pipeline = Pipeline.objects.filter(project=project)
         except:
             return not_found('Pipeline')
-        import subprocess, os, time, json, csv
+        images = []
+        image_ids = request.data['image_ids']
+        for img in image_ids:
+            try:
+                image = Image.objects.get(id=img)
+                images.append(image.data8.name)
+            except:
+                return not_found(f'Image (id:{img})')
 
-        tmp_path = "../media/tmp/"
-        file_path = "../media/"
-        os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
-        for image in images:
-            os.symlink(file_path+image.data.name, tmp_path+image.data.name)
+        tmp_path = os.path.join("tmp","")
+        file_path = os.path.join("..","media")
+        os.makedirs(os.path.dirname("tmp"), exist_ok=True)
+        for img in images:
+            os.symlink(file_path+img, tmp_path+img)
         output1 = subprocess.check_output(
-        f"clara create job -n {request.data['name']} -p {pipeline.pipeline_id} -f {tmp_path} ", 
-        shell=True, 
-        encoding='UTF-8'
+            f"sudo clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
+            shell=True, 
+            encoding='UTF-8'
         )
         line = output1.split('\n')
         job = (line[0].split(':'))[1]
-        output2 = subprocess.check_output(f" clara start job -j {job} ", shell=True, encoding='UTF-8')
-        while True:
-            check = subprocess.check_output(f" clara describe job -j {job} ", shell=True, encoding='UTF-8')
-            line_check = (check.split('\n'))[9]
-            status = (line_check.split(':'))[1].strip()
-            if "1" in status:
-                break
-            else: time.sleep(1)
-        output3 = subprocess.check_output(f"clara download {job}:/operators/{pipeline.name}/* {tmp_path} ", shell=True)
-        for image in images:
-            os.unlink(tmp_path+image.data.name)
-        # not completed
-        csvFilePath = tmp_path+'/Names.csv'
-        jsonFilePath = tmp_path+'Names.json'
-        data = {} 
-        with open(csvFilePath, encoding='utf-8') as csvf: 
-            csvReader = csv.DictReader(csvf) 
-            for rows in csvReader: 
-                key = rows['No'] 
-                data[key] = rows 
-        with open(jsonFilePath, 'w', encoding='utf-8') as jsonf: 
-            jsonf.write(json.dumps(data, indent=4))
+        output2 = subprocess.check_output(
+            f"sudo clara start job -j {job} ",
+            shell=True,
+            encoding='UTF-8'
+        )
+        q = Queue.objects.create(job=job,project=project,pipeline=pipeline)
+        q.save()
+        for img in images:
+            os.unlink(tmp_path+img)
+        for img in image_ids:
+            image = Image.objects.get(id=img)
+            image.status = 1
+            image.save()
+
         return Response(
             {
                 'message': 'Completed',
-                'result': jsonFilePath,
             },
             status=status.HTTP_200_OK
         )
@@ -647,9 +717,16 @@ class ImageViewSet(viewsets.ModelViewSet):
             image = Image.objects.get(id=pk)
         except:
             return not_found('Image')
-
-        serializer_class = ImageSerializer
-        return Response(serializer_class(image, many=False).data,
+        if image.status >=2 :
+            result = PredictResult.objects.get(image=image)
+            return Response(
+            {
+                'image': ImageSerializer(image, many=False).data,
+                'result': PredictResultSerializer(result, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )  
+        return Response(ImageSerializer(image, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
