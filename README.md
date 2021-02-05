@@ -37,7 +37,7 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	POST	/api/project/<project_id>/upload_dicom/		(dicom)
 	POST	/api/project/<project_id>/upload_image/		(image,patient_name,patient_id,physician_name,patient_age,content_date:YMD)
 	DELETE	/api/project/<project_id>/remove_image/	(id)
-	POST	/api/project/<project_id>/infer_image/	(image_ids:list)
+	POST	/api/project/<project_id>/infer_image/	(image_ids:list,pipeline:id)
 	PUT	/api/project/<project_id>/verify_image/	(id,actual_class,note)
 	GET	/api/project/<project_id>/list_image/
 	GET	/api/pipeline/
