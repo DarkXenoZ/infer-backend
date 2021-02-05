@@ -655,7 +655,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         file_path = os.path.join("..","media","")
         os.makedirs("tmp", exist_ok=True)
         for img in images:
-            img_name = img.split(':')[-1]
+            img_name = img.split('/')[-1]
             os.symlink(file_path+img, tmp_path+img_name)
         output1 = subprocess.check_output(
             f"sudo clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
