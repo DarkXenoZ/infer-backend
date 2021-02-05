@@ -653,7 +653,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         tmp_path = os.path.join("tmp","")
         file_path = os.path.join("..","media")
-        os.makedirs(os.path.dirname("tmp"), exist_ok=True)
+        os.makedirs("tmp", exist_ok=True)
         for img in images:
             os.symlink(file_path+img, tmp_path+img)
         output1 = subprocess.check_output(
