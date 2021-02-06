@@ -436,6 +436,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
         try:
             images_in_process = Image.objects.filter(project=project,status=1)
+            print(images_in_process)
             queue = Queue.objects.filter(project=project)
             for q in queue:
                 check = subprocess.check_output(f"/root/claracli/clara describe job -j {job} ", shell=True, encoding='UTF-8')
