@@ -434,41 +434,44 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 {'message': "Empty project"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        try:
-            images_in_process = Image.objects.filter(project=project,status=1)         
-            queue = Queue.objects.filter(project=project)
-            for q in queue:
-                check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
-                line_check = (check.split('\n'))[9]
-                state = (line_check.split(':'))[1].strip()
-                if 1 in state:
-                    output = subprocess.check_output(
-                        f"/root/claracli/clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
-                        shell=True, 
-                        encoding='UTF-8'
-                    )
-                    with open("tmp.csv", 'r') as f: 
-                        csvReader = csv.reader(f) 
-                        for rows in csvReader: 
-                            pred = {}
-                            for result in rows[1:]:
-                                diag, precision = result.split(":")
-                                pred[diag]=precision
-                            pred=json.dumps(pred)
-                            name = rows[0].split("/")[-1]
-                            img = Image.objects.get(name=name)
-                            img.status= 2
-                            img.save()
-                            predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
-                            predResult.save()
-                    q.delete()
-                    os.remove("tmp.csv")
-            return Response(ImageProjectSerializer(project, many=False).data,
-                        status=status.HTTP_200_OK)
-        except:
-            print('no in process')
-            return Response(ImageProjectSerializer(project, many=False).data,
-                        status=status.HTTP_200_OK)
+
+        images_in_process = Image.objects.filter(project=project,status=1)         
+        queue = Queue.objects.filter(project=project)
+        for q in queue:
+            check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
+            line_check = (check.split('\n'))[9]
+            state = (line_check.split(':'))[1].strip()
+            if 1 in state:
+                output = subprocess.check_output(
+                    f"/root/claracli/clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
+                    shell=True, 
+                    encoding='UTF-8'
+                )
+                print(output)
+                with open("tmp.csv", 'r') as f: 
+                    print('can open')
+                    csvReader = csv.reader(f) 
+                    for rows in csvReader: 
+                        pred = {}
+                        for result in rows[1:]:
+                            diag, precision = result.split(":")
+                            pred[diag]=precision
+                        pred=json.dumps(pred)
+                        name = rows[0].split("/")[-1]
+                        print(name)
+                        img = Image.objects.get(name=name)
+                        img.status= 2
+                        img.save()
+                        predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
+                        predResult.save()
+                q.delete()
+                os.remove("tmp.csv")
+        return Response(ImageProjectSerializer(project, many=False).data,
+                    status=status.HTTP_200_OK)
+        # except:
+        #     print('no in process')
+        #     return Response(ImageProjectSerializer(project, many=False).data,
+        #                 status=status.HTTP_200_OK)
 
     @action (detail=True, methods=['POST'],)
     def upload_dicom(self, request, pk=None):
