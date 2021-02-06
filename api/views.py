@@ -652,7 +652,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         for img in image_ids:
             try:
                 image = Image.objects.get(id=img)
-                images.append((image.data8.name,image.pk))
+                images.append((image.data8.name,image))
             except:
                 return not_found(f'Image (id:{img})')
 
