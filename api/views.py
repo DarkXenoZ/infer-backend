@@ -441,6 +441,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 check = subprocess.check_output(f"/root/claracli/clara describe job -j {job} ", shell=True, encoding='UTF-8')
                 line_check = (check.split('\n'))[9]
                 state = (line_check.split(':'))[1].strip()
+                print(state)
                 if "1" in state:
                     output = subprocess.check_output(
                         f"/root/claracli/clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
@@ -461,6 +462,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             img.save()
                             predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
                             predResult.save()
+                    q.delete()
                     os.remove("tmp.csv")
             return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
