@@ -86,7 +86,7 @@ class Image(models.Model):
 class PredictResult(models.Model):
     predicted_class = models.JSONField()
     predicted_mask = models.BinaryField(blank=True,null=True)
-    predicted_polygon = ArrayField(ArrayField(models.FloatField(),size=2))
+    predicted_polygon = ArrayField(ArrayField(models.FloatField(),size=2),null=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     pipeline = models.ForeignKey(
         Pipeline,
