@@ -112,6 +112,11 @@ class Queue(models.Model):
         related_name='queue',
         on_delete=models.CASCADE,
     )
+    image = models.ForeignKey(
+        Image,
+        related_name='queue',
+        on_delete=models.CASCADE,
+    )
 
 class Log(models.Model):
     user = models.ForeignKey(
