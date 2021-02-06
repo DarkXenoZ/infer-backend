@@ -468,6 +468,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
         except:
+            print('no in process')
             return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
 
