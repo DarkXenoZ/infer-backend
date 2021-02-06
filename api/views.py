@@ -442,6 +442,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             line_check = (check.split('\n'))[9]
             state = (line_check.split(':'))[1].strip()
             if "1" in state:
+                print(f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv" )
                 output = subprocess.check_output(
                     f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp.csv", 
                     shell=True, 
