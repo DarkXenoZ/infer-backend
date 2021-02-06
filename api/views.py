@@ -465,7 +465,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             img = Image.objects.get(name=name)
                             img.status= 2
                             img.save()
-                            predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
+                            predResult = PredictResult.objects.create(predicted_class=pred,pipeline=q.pipeline,image=img)
                             predResult.save()
                     os.remove(file_path)
                 q.delete()
