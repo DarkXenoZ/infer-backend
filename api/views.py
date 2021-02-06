@@ -444,12 +444,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if "1" in state:
                 print(f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv" )
                 output = subprocess.check_output(
-                    f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp.csv", 
+                    f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
                     shell=True, 
                     encoding='UTF-8'
                 )
                 print(output)
-                with open("tmp.csv", 'r') as f: 
+                with open("tmp/*.csv", 'r') as f: 
                     print('can open')
                     csvReader = csv.reader(f) 
                     for rows in csvReader: 
@@ -466,7 +466,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
                         predResult.save()
                 q.delete()
-                os.remove("tmp.csv")
+                os.remove("tmp/*.csv")
         return Response(ImageProjectSerializer(project, many=False).data,
                     status=status.HTTP_200_OK)
         # except:
