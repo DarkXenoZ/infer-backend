@@ -435,16 +435,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
-            images_in_process = Image.objects.filter(project=project,status=1)
-            print(images_in_process)
-            
+            images_in_process = Image.objects.filter(project=project,status=1)         
             queue = Queue.objects.filter(project=project)
             for q in queue:
                 check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
                 line_check = (check.split('\n'))[9]
                 state = (line_check.split(':'))[1].strip()
-                print(state)
-                if "1" in state:
+                if 1 in state:
                     output = subprocess.check_output(
                         f"/root/claracli/clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
                         shell=True, 
