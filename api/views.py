@@ -453,12 +453,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             with open(file_path, 'r') as f: 
                 csvReader = csv.reader(f) 
                 for rows in csvReader: 
+                    print(rows)
                     pred = {}
                     for result in rows[1:]:
                         diag, precision = result.split(":")
                         pred[diag]=precision
                     pred=json.dumps(pred)
                     name = rows[0].split("/")[-1]
+                    print(name)
                     img = Image.objects.get(name=name)
                     img.status= 2
                     img.save()
