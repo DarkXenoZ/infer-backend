@@ -11,7 +11,7 @@ import pydicom
 import imageio
 from datetime import datetime
 from django.core.files import File
-import subprocess, os, time, json, csv,shutil
+import subprocess, os, time, json, csv,shutil,glob
 
 # Create your views here.
 from django.http import HttpResponse
@@ -449,24 +449,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     encoding='UTF-8'
                 )
                 print(output)
-                with open("tmp/*.csv", 'r') as f: 
-                    print('can open')
-                    csvReader = csv.reader(f) 
-                    for rows in csvReader: 
-                        pred = {}
-                        for result in rows[1:]:
-                            diag, precision = result.split(":")
-                            pred[diag]=precision
-                        pred=json.dumps(pred)
-                        name = rows[0].split("/")[-1]
-                        print(name)
-                        img = Image.objects.get(name=name)
-                        img.status= 2
-                        img.save()
-                        predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
-                        predResult.save()
+                files_path= glob.glob("tmp/*.csv")
+                for file_path in files_path:
+                    with open(file_path, 'r') as f: 
+                        print('can open')
+                        csvReader = csv.reader(f) 
+                        for rows in csvReader: 
+                            pred = {}
+                            for result in rows[1:]:
+                                diag, precision = result.split(":")
+                                pred[diag]=precision
+                            pred=json.dumps(pred)
+                            name = rows[0].split("/")[-1]
+                            print(name)
+                            img = Image.objects.get(name=name)
+                            img.status= 2
+                            img.save()
+                            predResult = PredictResult.objects.create(predicted_class=pred,pipeline=pipeline,image=img)
+                            predResult.save()
+                    os.remove(file_path)
                 q.delete()
-                os.remove("tmp/*.csv")
         return Response(ImageProjectSerializer(project, many=False).data,
                     status=status.HTTP_200_OK)
         # except:
