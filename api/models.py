@@ -7,8 +7,10 @@ from django.core.validators import RegexValidator, \
 # Class project
 class Project(models.Model):
     TASK_CHOICES = (
-    ('Segmentation', 'Segmentation'),
-    ('Classification', 'Classification'),
+    ('2D Segmentation', '2D Segmentation'),
+    ('2D Classification', '2D Classification'),
+    ('3D Segmentation', '3D Segmentation'),
+    ('3D Classification', '3D Classification'),
     )
 
     cover = models.ImageField(upload_to='cover/',null=True)
