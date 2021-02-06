@@ -652,7 +652,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 return not_found(f'Image (id:{img})')
 
         tmp_path = os.path.join("tmp","")
-        file_path = os.path.join("..","media","")
+        file_path = os.path.join("media","")
         os.makedirs("tmp", exist_ok=True)
         for img in images:
             img_name = img.split('/')[-1]
