@@ -448,7 +448,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         encoding='UTF-8'
                     )
                     q.delete()
+            print('+++++++++')
             files_path= glob.glob("tmp/*.csv")
+            print('---------')
             for file_path in files_path:
                 with open(file_path, 'r') as f: 
                     csvReader = csv.reader(f) 
@@ -516,6 +518,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             f.close()
             os.remove(png_name)
             return Response({'message':img_serializer.errors},) 
+        create_log(user=request.user,
+                   desc=f"{request.user.username} upload {imgs['name']}")
         return Response(
                 {
                     'message': 'Image uploaded',
@@ -561,6 +565,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             img_serializer.save() 
         else:
             return Response({'message':img_serializer.errors},) 
+        create_log(user=request.user,
+                   desc=f"{request.user.username} upload {imgs['name']}")
         return Response(
                 {
                     'message': 'Image uploaded',
@@ -587,6 +593,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Image')
         image.delete()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} delete {image.data8.name}")
         return Response(
             {
                 'message': 'Image deleted',
@@ -660,7 +668,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         file_path = os.path.join("media","")
         os.makedirs("tmp", exist_ok=True)
         for img in images:
-            # shutil.copyfile(file_path+img, tmp_path+img_name)
             output1 = subprocess.check_output(
                 f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
                 shell=True, 
@@ -675,14 +682,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
             q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
             q.save()
-        # for img in images:
-        #     img_name = img.split('/')[-1]
-        #     os.remove(tmp_path+img_name)
         for img in image_ids:
             image = Image.objects.get(id=img)
             image.status = 1
             image.save()
-
+        create_log(user=request.user,
+                   desc=f"{request.user.username} infer image id  {images}")
         return Response(
             {
                 'message': 'Completed',
