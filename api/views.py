@@ -462,6 +462,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         img = Image.objects.get(name=name)
                         img.status= 2
                         img.save()
+                        check_queryset = PredictResult.objects.filter(pipeline=q.pipeline,image=img)
+                        if check_queryset.count() > 1:
+                            check_queryset.delete()
                         predResult = PredictResult.objects.create(predicted_class=pred,pipeline=q.pipeline,image=img)
                         predResult.save()
                 os.remove(file_path)
