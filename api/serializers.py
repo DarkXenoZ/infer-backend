@@ -47,10 +47,9 @@ class createProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ("id","name","description","task","cover","predclasses")
 class PredictResultSerializer(serializers.ModelField):
-    image = ImageSerializer(many=False)
     class Meta:
         model = PredictResult
-        fields = ("predicted_class","image","pipeline","timestamp")
+        fields = ("predicted_class","pipeline","timestamp")
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
