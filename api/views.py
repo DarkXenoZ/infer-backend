@@ -11,7 +11,7 @@ import pydicom
 import imageio
 from datetime import datetime
 from django.core.files import File
-import subprocess, os, time, json, csv
+import subprocess, os, time, json, csv,shutil
 
 # Create your views here.
 from django.http import HttpResponse
@@ -656,7 +656,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         os.makedirs("tmp", exist_ok=True)
         for img in images:
             img_name = img.split('/')[-1]
-            os.symlink(file_path+img, tmp_path+img_name)
+            shutil.copyfile(file_path+img, tmp_path+img_name)
         output1 = subprocess.check_output(
             f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
             shell=True, 
@@ -672,7 +672,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         q = Queue.objects.create(job=job,project=project,pipeline=pipeline)
         q.save()
         for img in images:
-            os.unlink(tmp_path+img)
+            img_name = img.split('/')[-1]
+            os.remove(tmp_path+img_name)
         for img in image_ids:
             image = Image.objects.get(id=img)
             image.status = 1
