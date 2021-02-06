@@ -438,12 +438,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             images_in_process = Image.objects.filter(project=project,status=1)
             queue = Queue.objects.filter(project=project)
             for q in queue:
-                check = subprocess.check_output(f"sudo clara describe job -j {job} ", shell=True, encoding='UTF-8')
+                check = subprocess.check_output(f"/root/claracli/clara describe job -j {job} ", shell=True, encoding='UTF-8')
                 line_check = (check.split('\n'))[9]
                 state = (line_check.split(':'))[1].strip()
                 if "1" in status:
                     output = subprocess.check_output(
-                        f"sudo clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
+                        f"/root/claracli/clara download {q.job}:/operators/{pipeline.operator}/*.csv  tmp.csv", 
                         shell=True, 
                         encoding='UTF-8'
                     )
@@ -658,14 +658,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             img_name = img.split('/')[-1]
             os.symlink(file_path+img, tmp_path+img_name)
         output1 = subprocess.check_output(
-            f"sudo clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
+            f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
             shell=True, 
             encoding='UTF-8'
         )
         line = output1.split('\n')
         job = (line[0].split(':'))[1]
         output2 = subprocess.check_output(
-            f"sudo clara start job -j {job} ",
+            f"/root/claracli/clara start job -j {job} ",
             shell=True,
             encoding='UTF-8'
         )
