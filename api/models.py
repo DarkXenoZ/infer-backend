@@ -116,8 +116,6 @@ class Queue(models.Model):
         Image,
         related_name='queue',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
     )
 
 class Log(models.Model):
