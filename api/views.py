@@ -447,24 +447,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         shell=True, 
                         encoding='UTF-8'
                     )
-                    files_path= glob.glob("tmp/*.csv")
-                    for file_path in files_path:
-                        with open(file_path, 'r') as f: 
-                            csvReader = csv.reader(f) 
-                            for rows in csvReader: 
-                                pred = {}
-                                for result in rows[1:]:
-                                    diag, precision = result.split(":")
-                                    pred[diag]=precision
-                                pred=json.dumps(pred)
-                                name = rows[0].split("/")[-1]
-                                img = Image.objects.get(name=name)
-                                img.status= 2
-                                img.save()
-                                predResult = PredictResult.objects.create(predicted_class=pred,pipeline=q.pipeline,image=img)
-                                predResult.save()
-                        os.remove(file_path)
                     q.delete()
+            files_path= glob.glob("tmp/*.csv")
+            for file_path in files_path:
+                with open(file_path, 'r') as f: 
+                    csvReader = csv.reader(f) 
+                    for rows in csvReader: 
+                        pred = {}
+                        for result in rows[1:]:
+                            diag, precision = result.split(":")
+                            pred[diag]=precision
+                        pred=json.dumps(pred)
+                        name = rows[0].split("/")[-1]
+                        img = Image.objects.get(name=name)
+                        img.status= 2
+                        img.save()
+                        predResult = PredictResult.objects.create(predicted_class=pred,pipeline=q.pipeline,image=img)
+                        predResult.save()
+                os.remove(file_path)
             return Response(ImageProjectSerializer(project, many=False).data,
                     status=status.HTTP_200_OK)
         except:
@@ -652,7 +652,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         for img in image_ids:
             try:
                 image = Image.objects.get(id=img)
-                images.append(image.data8.name)
+                images.append((image.data8.name,image.pk))
             except:
                 return not_found(f'Image (id:{img})')
 
@@ -660,25 +660,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
         file_path = os.path.join("media","")
         os.makedirs("tmp", exist_ok=True)
         for img in images:
-            img_name = img.split('/')[-1]
-            shutil.copyfile(file_path+img, tmp_path+img_name)
-        output1 = subprocess.check_output(
-            f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {tmp_path} ", 
-            shell=True, 
-            encoding='UTF-8'
-        )
-        line = output1.split('\n')
-        job = (line[0].split(':'))[1]
-        output2 = subprocess.check_output(
-            f"/root/claracli/clara start job -j {job} ",
-            shell=True,
-            encoding='UTF-8'
-        )
-        q = Queue.objects.create(job=job,project=project,pipeline=pipeline)
-        q.save()
-        for img in images:
-            img_name = img.split('/')[-1]
-            os.remove(tmp_path+img_name)
+            # shutil.copyfile(file_path+img, tmp_path+img_name)
+            output1 = subprocess.check_output(
+                f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
+                shell=True, 
+                encoding='UTF-8'
+            )
+            line = output1.split('\n')
+            job = (line[0].split(':'))[1]
+            output2 = subprocess.check_output(
+                f"/root/claracli/clara start job -j {job} ",
+                shell=True,
+                encoding='UTF-8'
+            )
+            q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
+            q.save()
+        # for img in images:
+        #     img_name = img.split('/')[-1]
+        #     os.remove(tmp_path+img_name)
         for img in image_ids:
             image = Image.objects.get(id=img)
             image.status = 1
