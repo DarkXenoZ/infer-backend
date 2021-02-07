@@ -755,7 +755,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             return Response(
             {
                 'image': ProjectImageSerializer(image, many=False).data,
-                'result': PredictResultSerializer(result,many=True).data,
+                'result': ResultSerializer(result,many=True).data,
             },
             status=status.HTTP_200_OK
         )  

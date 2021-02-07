@@ -19,7 +19,7 @@ class ImageSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","verify_by","timestamp"
+            "actual_class","predclass","verify_by","timestamp"
             )
 
 
@@ -47,7 +47,7 @@ class createProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ("id","name","description","task","cover","predclasses")
 
-class PredictResultSerializer(serializers.ModelField):
+class PredictResultSerializer(serializers.ModelSerializer):
     predicted_class = serializers.JSONField()
     class Meta:
         model = PredictResult
@@ -100,6 +100,6 @@ class ProjectImageSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","verify_by","timestamp",
+            "actual_class","verify_by","predclass","timestamp",
             "project_name","project_task","project_predclasses"
             )
