@@ -683,7 +683,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Pipeline')
         images = []
         image_ids = request.data['image_ids']
-        image_ids=image_ids.strip('][').split(',') 
         for img in image_ids:
             try:
                 image = Image.objects.get(id=img)
