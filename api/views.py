@@ -459,14 +459,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         max_diag = max(pred,key=lambda k: pred[k])
                         pred=json.dumps(pred)
                         name = rows[0].split("/")[-1]
-                        img = Image.objects.get(name=name)
+                        img = Image.objects.get(data8__contains=name.split('/')[-1])
                         img.predclass = max_diag
                         img.status= 2
                         img.save()
-                        check_queryset = PredictResult.objects.filter(pipeline=q.pipeline,image=img)
-                        if check_queryset.count() > 1:
-                            check_queryset.delete()
-                        predResult = PredictResult.objects.create(predicted_class=pred,pipeline=q.pipeline,image=img)
+                        predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                        predResult.predicted_class = pred
                         predResult.save()
                 os.remove(file_path)
             return Response(ImageProjectSerializer(project, many=False).data,
@@ -702,6 +700,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 shell=True,
                 encoding='UTF-8'
             )
+            try:
+                result = PredictResult.objects.create(pipeline=q.pipeline,image=img[1])
+                result.save()
+            except:
+                return Response(
+                    {
+                        "message":"This image infered with The pipeline"
+                    }
+                )
             q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
             q.save()
         for img in image_ids:
