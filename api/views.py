@@ -623,41 +623,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )        
-        #edit result and save
-    @action (detail=True, methods=['PUT'],)
-    def verify_image(self, request, pk=None):
-        try:
-            project = Project.objects.get(id=pk)
-        except:
-            return not_found('Project')
-        try:
-            user = check_staff_permission(project, request)
-        except:
-            return err_no_permission
-        response = check_arguments(request.data, ['id','actual_class','note'])
-        if response[0] != 0:
-            return response[1]
-        try:
-            image = Image.objects.get(id=request.data['id'])
-        except:
-            return err_not_found
-        if request.data['actual_class'] not in project.predclasses:
-            return not_found('predClass')
-        image.actual_class = request.data['actual_class']
-        image.status = 3
-        image.timestamp = datetime.now()
-        image.verify_by = f'{user.first_name} {user.last_name}'
-        image.save()
-        create_log(user=request.user,
-                   desc=f"{request.user.username} verify {image.data8.name}")
-        return Response(
-            {
-                'message': 'Image Verified',
-                'result': ImageSerializer(image, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )
-        #infer not finish na ja
+   
     @action (detail=True, methods=['POST'],)
     def infer_image(self, request, pk=None):
         try:
@@ -784,6 +750,40 @@ class ImageViewSet(viewsets.ModelViewSet):
     def create(self, request, pk=None):
         return err_not_allowed
     
+    @action (detail=True, methods=['PUT'],)
+    def verify_image(self, request, pk=None):
+        try:
+            image = Image.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            project = Project.objects.get(id=image.project.id)
+        except:
+            return not_found('Project')
+        try:
+            user = check_staff_permission(project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['actual_class','note'])
+        if response[0] != 0:
+            return response[1]
+        if request.data['actual_class'] not in project.predclasses:
+            return not_found('predClass')
+        image.actual_class = request.data['actual_class']
+        image.status = 3
+        image.note = request.data['note']
+        image.timestamp = datetime.now()
+        image.verify_by = f'{user.first_name} {user.last_name}'
+        image.save()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} verify {image.data8.name}")
+        return Response(
+            {
+                'message': 'Image Verified',
+                'result': ImageSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
 
 class PredictResultViewSet(viewsets.ModelViewSet):
     queryset = PredictResult.objects.all()
