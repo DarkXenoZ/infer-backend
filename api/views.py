@@ -701,13 +701,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 encoding='UTF-8'
             )
             try:
-                result = PredictResult.objects.create(pipeline=q.pipeline,image=img[1])
+                result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
                 result.save()
             except:
                 return Response(
                     {
                         "message":"This image infered with The pipeline"
-                    }
+                    },status=status.HTTP_400_BAD_REQUEST
                 )
             q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
             q.save()
