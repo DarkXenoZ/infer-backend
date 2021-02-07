@@ -69,7 +69,7 @@ class Image(models.Model):
     content_date = models.DateField()
     physician_name = models.CharField(max_length=50)
     status = models.IntegerField(default=0) # 0:uploaded 1:in process 2:Annotated 3:verified
-    actual_class = models.CharField(max_length=50,default='')
+    actual_class =ArrayField(models.CharField(max_length=50,default=''))
     timestamp = models.DateTimeField(auto_now_add=True, )
     verify_by = models.CharField(max_length=100,blank=True)
     project = models.ForeignKey(
@@ -101,6 +101,8 @@ class PredictResult(models.Model):
         related_name='result',
         on_delete=models.CASCADE,
     )
+    class Meta:
+        unique_together = ('pipeline','image')
     
 class Queue(models.Model):
     #JOB_ID Queue
