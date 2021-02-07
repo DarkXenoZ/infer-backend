@@ -477,6 +477,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
 
+    @action (detail=True, methods=['GET'],)
+    def list_uninfer_image(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        try:
+            user = check_staff_permission(project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['pipeline',])
+        if response[0] != 0:
+            return response[1]
+        try:
+            pipeline = Pipeline.objects.get(id=request.data["pipeline"])
+        except:
+            return not_found('Pipeline')
+    
+        list_img = Image.objects.exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('id', flat=True))
+
+        return Response(
+                {
+                    'result': ImageSerializer(list_img, many=True).data,
+                },
+                status=status.HTTP_200_OK
+            )
+
     @action (detail=True, methods=['POST'],)
     def upload_dicom(self, request, pk=None):
         try:
