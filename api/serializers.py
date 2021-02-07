@@ -102,7 +102,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
             "id","name","data8","data16",
             "patient_name","patient_id",
             "patient_age","content_date",
-            "physician_name","status",
+            "physician_name","status","note",
             "actual_class","verify_by","predclass","timestamp",
             "project_name","project_task","project_predclasses"
             )

@@ -73,6 +73,7 @@ class Image(models.Model):
     predclass = models.CharField(max_length=50,null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     verify_by = models.CharField(max_length=100,blank=True)
+    note = models.CharField(max_length=300,null=True,blank=True,default=" ")
     project = models.ForeignKey(
         Project,
         related_name='images',
