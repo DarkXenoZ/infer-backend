@@ -487,11 +487,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(project, request)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['pipeline',])
-        if response[0] != 0:
-            return response[1]
         try:
-            pipeline = Pipeline.objects.get(id=request.data["pipeline"])
+            pipeline = Pipeline.objects.get(id=request.GET.get("pipeline"))
         except:
             return not_found('Pipeline')
     
