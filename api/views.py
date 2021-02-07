@@ -55,6 +55,8 @@ def check_arguments(request_arr, args):
         return 1, Response(response, status=status.HTTP_400_BAD_REQUEST)
     return 0,
 
+def check_staff_permission(project, request):
+    return request.user if request.user.is_staff else project.users.get(username=request.user.username)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -424,7 +426,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         try:
@@ -482,7 +484,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, ['dicom',])
@@ -536,7 +538,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, [
@@ -583,7 +585,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, ['id',])
@@ -611,7 +613,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, ['id','actual_class','note'])
@@ -645,7 +647,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Project')
         try:
-            user = project.users.get(username=request.user.username)
+            user = check_staff_permission(project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, ['image_ids','pipeline'])
