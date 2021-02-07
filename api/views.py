@@ -758,8 +758,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    @action (detail=True, methods=['DELETE'],)
-    def remove_image(self, request, pk=None):
+    def delete(self, request, pk=None):
         try:
             image = Image.objects.get(id=pk)
         except:
@@ -774,7 +773,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             Response(
             {
-                'message': 'Can not delete the image,
+                'message': 'Can not delete the image',
             },
             status=status.HTTP_200_OK
         )        
