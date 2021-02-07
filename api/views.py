@@ -763,8 +763,12 @@ class ImageViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )  
-        return Response(ProjectImageSerializer(image, many=False).data,
-                        status=status.HTTP_200_OK, )       
+        return Response(
+            {
+                'image':ProjectImageSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )      
     
     def list(self, request):
         if not request.user.is_staff:
