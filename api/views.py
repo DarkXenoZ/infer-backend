@@ -758,7 +758,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    def delete(self, request, pk=None):
+    def destroy(self, request, pk=None):
         try:
             image = Image.objects.get(id=pk)
         except:
