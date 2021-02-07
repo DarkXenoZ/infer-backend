@@ -614,6 +614,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
             image = Image.objects.get(id=request.GET.get('id'))
         except:
             return not_found('Image')
+        try:
+            os.remove(os.path.join("media",image.data8.name))
+            os.remove(os.path.join("media",image.data16.name))
+        except:
+            Response(
+            {
+                'message': 'Can not delete the image,
+            },
+            status=status.HTTP_200_OK
+        )        
         image.delete()
         create_log(user=request.user,
                    desc=f"{request.user.username} delete {image.data8.name}")
