@@ -5,3 +5,6 @@ psycopg2
 pydicom
 imageio
 opencv-python
+tensorflow
+numpy
+matplotlib

@@ -54,7 +54,7 @@ class PredictResultSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = PredictResult
-        fields = ("pipeline_name","predicted_class","timestamp")
+        fields = ("gradcam","pipeline_name","predicted_class","timestamp")
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)

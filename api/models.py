@@ -89,6 +89,7 @@ class Image(models.Model):
     
 
 class PredictResult(models.Model):
+    gradcam = models.FileField(upload_to='imagegrad/')
     predicted_class = models.JSONField(null=True,blank=True)
     predicted_mask = models.BinaryField(blank=True,null=True)
     predicted_polygon = ArrayField(ArrayField(models.FloatField(),size=2),null=True)
