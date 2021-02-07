@@ -599,41 +599,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK
             )
-
-    @action (detail=True, methods=['DELETE'],)
-    def remove_image(self, request, pk=None):
-        try:
-            project = Project.objects.get(id=pk)
-        except:
-            return not_found('Project')
-        try:
-            user = check_staff_permission(project, request)
-        except:
-            return err_no_permission
-        try:
-            image = Image.objects.get(id=request.GET.get('id'))
-        except:
-            return not_found('Image')
-        try:
-            os.remove(os.path.join("media",image.data8.name))
-            os.remove(os.path.join("media",image.data16.name))
-        except:
-            Response(
-            {
-                'message': 'Can not delete the image,
-            },
-            status=status.HTTP_200_OK
-        )        
-        image.delete()
-        create_log(user=request.user,
-                   desc=f"{request.user.username} delete {image.data8.name}")
-        return Response(
-            {
-                'message': 'Image deleted',
-                'result': ImageProjectSerializer(project, many=False).data,
-            },
-            status=status.HTTP_200_OK
-        )        
    
     @action (detail=True, methods=['POST'],)
     def infer_image(self, request, pk=None):
@@ -792,6 +757,37 @@ class ImageViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
+    @action (detail=True, methods=['DELETE'],)
+    def remove_image(self, request, pk=None):
+        try:
+            image = Image.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            user = check_staff_permission(image.project, request)
+        except:
+            return err_no_permission
+        try:
+            os.remove(os.path.join("media",image.data8.name))
+            os.remove(os.path.join("media",image.data16.name))
+        except:
+            Response(
+            {
+                'message': 'Can not delete the image,
+            },
+            status=status.HTTP_200_OK
+        )        
+        image.delete()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} delete {image.data8.name}")
+        return Response(
+            {
+                'message': 'Image deleted',
+                'result': ImageProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )        
 
 class PredictResultViewSet(viewsets.ModelViewSet):
     queryset = PredictResult.objects.all()
