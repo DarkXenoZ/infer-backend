@@ -223,11 +223,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if each.actual_class == '' :
                 pass
             else:
-                diag = each.actual_class
-                if diag not in diag_list:
-                    diag_list[diag] = 1
-                else:
-                    diag_list[diag]+= 1
+                diags = tuple(each.actual_class)
+                for diag in diags:
+                    if diag not in diag_list:
+                        diag_list[diag] = 1
+                    else:
+                        diag_list[diag]+= 1
         total = sum(diag_list.values())
         for i in diag_list: 
             diag_list[i] = diag_list[i]/total
