@@ -83,3 +83,21 @@ class ImageProjectSerializer(serializers.ModelSerializer):
         fields = ("id","name","images")
 
 
+class ProjectImageSerializer(serializers.ModelSerializer):
+    project_name = serializers.CharField(
+        source='project.name'
+    )
+    project_task = serializers.CharField(
+        source='project.task'
+    )
+    project_predclasses = serializers.ListField(child=serializers.CharField(),source='project.predclasses')
+    class Meta:
+        model = Image
+        fields = (
+            "id","name","data8","data16",
+            "patient_name","patient_id",
+            "patient_age","content_date",
+            "physician_name","status",
+            "actual_class","verify_by","timestamp",
+            "project_name","project_task","project_predclasses"
+            )

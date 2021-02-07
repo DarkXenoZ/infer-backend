@@ -758,12 +758,12 @@ class ImageViewSet(viewsets.ModelViewSet):
             result = PredictResult.objects.get(image=image)
             return Response(
             {
-                'image': ImageSerializer(image, many=False).data,
+                'image': ProjectImageSerializer(image, many=False).data,
                 'result': result.predicted_class,
             },
             status=status.HTTP_200_OK
         )  
-        return Response(ImageSerializer(image, many=False).data,
+        return Response(ProjectImageSerializer(image, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
