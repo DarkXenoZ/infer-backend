@@ -39,11 +39,11 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	DELETE	/api/project/<project_id>/remove_image/	(id)
 	POST	/api/project/<project_id>/infer_image/	(image_ids:list,pipeline:id	)
 	GET	/api/project/<project_id>/list_uninfer_image/	(pipeline:id)
-	PUT	/api/project/<project_id>/verify_image/	(id,actual_class,note)
 	GET	/api/project/<project_id>/list_image/
 	GET	/api/pipeline/
 	GET	/api/pipeline/<pipeline_id>
 	GET	/api/image/
 	GET	/api/image/<image_id>
-	*GET	/api/predictResult/
-	*GET	/api/predictResult/<predictResult_id>
+	PUT	/api/image/<image_id>/verify_image/	(actual_class,note)
+	GET	/api/predictResult/
+	GET	/api/predictResult/<predictResult_id>
