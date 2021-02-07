@@ -70,6 +70,7 @@ class Image(models.Model):
     physician_name = models.CharField(max_length=50)
     status = models.IntegerField(default=0) # 0:uploaded 1:in process 2:Annotated 3:verified
     actual_class =ArrayField(models.CharField(max_length=50,blank=True,null=True))
+    predclass = models.CharField(max_length=50,null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     verify_by = models.CharField(max_length=100,blank=True)
     project = models.ForeignKey(

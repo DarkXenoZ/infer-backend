@@ -456,9 +456,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         for result in rows[1:]:
                             diag, precision = result.split(":")
                             pred[diag]=precision
+                        max_diag = max(pred,key=lambda k: pred[k])
                         pred=json.dumps(pred)
                         name = rows[0].split("/")[-1]
                         img = Image.objects.get(name=name)
+                        img.predclass = max_diag
                         img.status= 2
                         img.save()
                         check_queryset = PredictResult.objects.filter(pipeline=q.pipeline,image=img)
