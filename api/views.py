@@ -220,7 +220,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         status_count=[0,0,0,0]
         for each in images:
             status_count[each.status]+=1
-            if each.actual_class == '' :
+            if each.actual_class == None :
                 pass
             else:
                 diags = tuple(each.actual_class)
