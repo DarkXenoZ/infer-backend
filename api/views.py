@@ -757,18 +757,15 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             return err_not_found
         try:
-            project = Project.objects.get(id=image.project.id)
-        except:
-            return not_found('Project')
-        try:
-            user = check_staff_permission(project, request)
+            user = check_staff_permission(image.project, request)
         except:
             return err_no_permission
         response = check_arguments(request.data, ['actual_class','note'])
         if response[0] != 0:
             return response[1]
-        if request.data['actual_class'] not in project.predclasses:
-            return not_found('predClass')
+        for diag in request.data['actual_class'] :
+            if diag not in image.project.predclasses:
+                return not_found('predClass')
         image.actual_class = request.data['actual_class']
         image.status = 3
         image.note = request.data['note']
