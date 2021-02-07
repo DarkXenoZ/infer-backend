@@ -350,11 +350,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return not_found('Project')
         if not request.user.is_staff:
             return err_no_permission
-        response = check_arguments(request.data, ['username',])
-        if response[0] != 0:
-            return response[1]
         try:
-            user = User.objects.get(projects=project, username=request.data['username'])
+            user = User.objects.get(projects=project, username=request.GET.get('username'))
         except:
             return Response(
                 {'message': "This user not in the project"},
@@ -612,11 +609,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(project, request)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['id',])
-        if response[0] != 0:
-            return response[1]
         try:
-            image = Image.objects.get(id=request.data['id'])
+            image = Image.objects.get(id=request.GET.get('id'))
         except:
             return not_found('Image')
         image.delete()
@@ -755,11 +749,11 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Image')
         if image.status >=2 :
-            result = PredictResult.objects.get(image=image)
+            result = PredictResult.objects.filter(image=image)
             return Response(
             {
                 'image': ProjectImageSerializer(image, many=False).data,
-                'result': result.predicted_class,
+                'result': PredictResultSerializer(result,many=True).data,
             },
             status=status.HTTP_200_OK
         )  
