@@ -492,7 +492,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Pipeline')
     
-        list_img = Image.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('id', flat=True))
+        list_img = Image.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
 
         return Response(
                 {
