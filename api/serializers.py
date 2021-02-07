@@ -49,7 +49,7 @@ class createProjectSerializer(serializers.ModelSerializer):
 class PredictResultSerializer(serializers.ModelField):
     class Meta:
         model = PredictResult
-        fields = ("predicted_class","pipeline","timestamp")
+        fields = ("pipeline","predicted_class","timestamp")
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
