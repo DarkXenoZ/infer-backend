@@ -783,7 +783,6 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'message': 'Image deleted',
-                'result': ImageProjectSerializer(project, many=False).data,
             },
             status=status.HTTP_200_OK
         )        
