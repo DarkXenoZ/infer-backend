@@ -1,12 +1,15 @@
 import os
 
 from celery import Celery
+import os
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
 
+broker_pass = os.environ.get('RABBITMQ_PASSWORD')
+
 app = Celery(
-    'project', broker='amqp://deepmedadmin:4!F:c9h$z59Pkaq<@rabbitmq:5672//')
+    'project', broker=f'amqp://deepmedadmin:{broker_pass}:5672//')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
