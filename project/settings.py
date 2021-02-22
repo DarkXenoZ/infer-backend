@@ -90,12 +90,12 @@ DATABASES = {
         'NAME': 'infer-backend', 
         'USER': 'postgres', 
         'PASSWORD': 'Omeracan123',
-        'HOST': '127.0.0.1', 
+        'HOST': 'postgres', # hostname
         'PORT': '5432',
     }
 }
-if os.environ.get('DB_HOST'):
-    DATABASES['default']['HOST'] = os.environ.get('DB_HOST')
+# if os.environ.get('DB_HOST'):
+#     DATABASES['default']['HOST'] = os.environ.get('DB_HOST')
 if os.environ.get('POSTGRES_PASSWORD'):
     DATABASES['default']['PASSWORD'] = os.environ.get('POSTGRES_PASSWORD')
 if os.environ.get('POSTGRES_DB'):
