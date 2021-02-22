@@ -90,7 +90,7 @@ DATABASES = {
         'NAME': 'infer-backend', 
         'USER': 'postgres', 
         'PASSWORD': 'Omeracan123',
-        'HOST': 'postgres', # hostname
+        'HOST': 'db', # hostname
         'PORT': '5432',
     }
 }
