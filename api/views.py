@@ -463,9 +463,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queue = Queue.objects.filter(project=project)
             for q in queue:
                 check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
-                line_check = (check.split('\n'))[9]
-                state = (line_check.split(':'))[1].strip()
-                if "1" in state:
+                line_check = check.split('\n')
+                state = (line_check[6].split(':'))[1].strip()
+                ops = (line_check[9].split(':'))[1].strip()
+                if ("1" in ops )and("STOPPED" in state):
                     output = subprocess.check_output(
                         f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
                         shell=True, 
