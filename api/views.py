@@ -12,7 +12,7 @@ import imageio
 from datetime import datetime
 from django.core.files import File
 import subprocess, os, time, json, csv,shutil,glob
-
+from .tasks import save_image
 from tensorflow import keras
 import numpy as np
 import matplotlib.cm as cm
@@ -695,6 +695,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+    @action (detail=True, methods=['GET'],)
+    def test(self, request, pk=None):
+        save_image.delay(pk)
         
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
