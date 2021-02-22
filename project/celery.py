@@ -6,7 +6,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
 
 broker_pass = os.environ.get('RABBITMQ_PASSWORD')
 app = Celery(
-    'project', broker=f'amqp://deepmedadmin:{broker_pass}:5672//')
+    'project', broker=f'amqp://deepmedadmin:{broker_pass}@rabbitmq:5672//')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
