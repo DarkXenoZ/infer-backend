@@ -164,25 +164,23 @@ class UserViewSet(viewsets.ModelViewSet):
             user = User.objects.get(username=pk)
             try:
                 user.first_name = request.data["first_name"]
-                user.save()
             except:
                 pass
             try:
                 user.last_name = request.data["last_name"]
-                user.save()
             except:
                 pass
             try:
                 user.email = request.data["email"]
-                user.save()
             except:
                 pass
-            return Response(
+            user.save()
+        except:
+            return err_not_found
+        return Response(
                 UserSerializer(user, many=False).data,
                 status=status.HTTP_200_OK
             )
-        except:
-            return err_not_found
 
     def destroy(self, request, pk=None):
         if not request.user.is_staff:
@@ -192,6 +190,7 @@ class UserViewSet(viewsets.ModelViewSet):
             user.delete()
         except:
             return err_not_found
+        return Response(status=status.HTTP_200_OK)
     
     @action(methods=['PUT'], detail=True)
     def change_password(self, request, pk=None):
@@ -351,6 +350,40 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+    
+    def update(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            try:
+                project.description = request.data["description"]
+            except:
+                pass
+            try:
+                project.cover = request.data["cover"]
+            except:
+                pass
+            project.save()
+        except:
+            return err_invalid_input
+        return Response(
+                ProjectSerializer(project, many=False).data,
+                status=status.HTTP_200_OK
+            )
+        
+    def destroy(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            project = Project.objects.get(id=pk)
+            project.delete()
+        except:
+            return err_not_found
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['GET'], )    
     def list_pipeline(self, request, pk=None):
@@ -482,6 +515,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
+    
     @action (detail=True, methods=['GET'],)
     def list_image(self, request, pk=None):
         try:
@@ -709,9 +743,57 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
     def create(self, request, pk=None):
         return err_not_allowed
-    
+
+    def update(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            pipeline = Pipeline.objects.get(id=pk)
+        except:
+            return not_found('Pipeline')
+        try:
+            try:
+                pipeline.name = request.data["name"]
+            except:
+                pass
+            try:
+                pipeline.pipeline_id = request.data["pipeline_id"]
+            except:
+                pass
+            try:
+                pipeline.model_name = request.data["model_name"]
+            except:
+                pass
+            try:
+                pipeline.operator = request.data["operator"]
+            except:
+                pass
+            try:
+                pipeline.accuracy = request.data["accuracy"]
+            except:
+                pass
+            try:
+                pipeline.description = request.data["description"]
+            except:
+                pass
+            pipeline.save()
+        except:
+            return err_invalid_input
+        return Response(
+                PipelineSerializer(pipeline, many=False).data,
+                status=status.HTTP_200_OK
+            )
+
     def destroy(self,request, pk=None):
-        return err_not_allowed
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            pipeline = Pipeline.objects.get(id=pk)
+            pipeline.delete()
+        except:
+            return not_found('Pipeline')
+        return Response(status=status.HTTP_200_OK)
+
 
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
