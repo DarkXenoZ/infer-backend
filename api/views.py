@@ -184,8 +184,15 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return err_not_found
 
+    def destroy(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            user = User.objects.get(username=pk)
+            user.delete()
+        except:
+            return err_not_found
     
-
     @action(methods=['PUT'], detail=True)
     def change_password(self, request, pk=None):
         if pk != request.user.username and not request.user.is_staff:
