@@ -150,13 +150,28 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = User.objects.all()
         try:
             user = queryset.get(username=pk)
-            serializer_class = UserSerializer
             return Response(
-                serializer_class(user, many=False).data,
+                UserSerializer(user, many=False).data,
                 status=status.HTTP_200_OK
             )
         except:
             return err_not_found
+    
+    def update(self, request, pk=None):
+        if pk != request.user.username and not request.user.is_staff:
+            return err_no_permission
+        try:
+            user = User.objects.get(username=pk)
+            user.first_name = request.data["first_name"]
+            user.save()
+            return Response(
+                UserSerializer(user, many=False).data,
+                status=status.HTTP_200_OK
+            )
+        except:
+            return err_not_found
+
+    
 
     @action(methods=['PUT'], detail=True)
     def change_password(self, request, pk=None):
