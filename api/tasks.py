@@ -84,8 +84,8 @@ def infer_image(project,pipeline,image_ids,user):
         image = Image.objects.get(id=img)
         image.status = 1
         image.save()
-    create_log(user=request.user,
-                desc=f"{request.user.username} infer image id  {image_ids}")
+    create_log(user=user,
+                desc=f"{user.username} infer image id  {image_ids}")
     return Response(
         {
             'message': 'Completed',
