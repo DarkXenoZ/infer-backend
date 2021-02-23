@@ -162,8 +162,21 @@ class UserViewSet(viewsets.ModelViewSet):
             return err_no_permission
         try:
             user = User.objects.get(username=pk)
-            user.first_name = request.data["first_name"]
-            user.save()
+            try:
+                user.first_name = request.data["first_name"]
+                user.save()
+            except:
+                pass
+            try:
+                user.last_name = request.data["last_name"]
+                user.save()
+            except:
+                pass
+            try:
+                user.email = request.data["email"]
+                user.save()
+            except:
+                pass
             return Response(
                 UserSerializer(user, many=False).data,
                 status=status.HTTP_200_OK
