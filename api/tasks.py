@@ -1,6 +1,7 @@
 from celery import shared_task
 from .models import *
 import os
+import subprocess
 from tensorflow import keras
 import numpy as np
 import matplotlib.cm as cm
@@ -40,55 +41,55 @@ def save_image(project_id):
 @shared_task
 def infer_image(project,pipeline,image_ids):
     images = []
-        image_ids = image_ids
-        for img in image_ids:
-            try:
-                image = Image.objects.get(id=img)
-                images.append((image.data8.name,image))
-            except:
-                return not_found(f'Image (id:{img})')
-
-        tmp_path = os.path.join("tmp","")
-        file_path = os.path.join("media","")
-        os.makedirs("tmp", exist_ok=True)
-        for img in images:
-            output1 = subprocess.check_output(
-                f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
-                shell=True, 
-                encoding='UTF-8'
-            )
-            line = output1.split('\n')
-            job = (line[0].split(':'))[1]
-            output2 = subprocess.check_output(
-                f"/root/claracli/clara start job -j {job} ",
-                shell=True,
-                encoding='UTF-8'
-            )
-            try:
-                img_nograd = img[0]
-                img_io = io.BytesIO()
-                img_grad = mock_heatmap(img_nograd)
-                img_grad.save(img_io, format='PNG')
-                result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
-                result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
-                result.save()
-            except:
-                return Response(
-                    {
-                        "message":"This image infered with The pipeline"
-                    },status=status.HTTP_400_BAD_REQUEST
-                )
-            q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
-            q.save()
-        for img in image_ids:
+    image_ids = image_ids
+    for img in image_ids:
+        try:
             image = Image.objects.get(id=img)
-            image.status = 1
-            image.save()
-        create_log(user=request.user,
-                   desc=f"{request.user.username} infer image id  {image_ids}")
-        return Response(
-            {
-                'message': 'Completed',
-            },
-            status=status.HTTP_200_OK
-        )    
+            images.append((image.data8.name,image))
+        except:
+            return not_found(f'Image (id:{img})')
+
+    tmp_path = os.path.join("tmp","")
+    file_path = os.path.join("media","")
+    os.makedirs("tmp", exist_ok=True)
+    for img in images:
+        output1 = subprocess.check_output(
+            f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
+            shell=True, 
+            encoding='UTF-8'
+        )
+        line = output1.split('\n')
+        job = (line[0].split(':'))[1]
+        output2 = subprocess.check_output(
+            f"/root/claracli/clara start job -j {job} ",
+            shell=True,
+            encoding='UTF-8'
+        )
+        try:
+            img_nograd = img[0]
+            img_io = io.BytesIO()
+            img_grad = mock_heatmap(img_nograd)
+            img_grad.save(img_io, format='PNG')
+            result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+            result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
+            result.save()
+        except:
+            return Response(
+                {
+                    "message":"This image infered with The pipeline"
+                },status=status.HTTP_400_BAD_REQUEST
+            )
+        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
+        q.save()
+    for img in image_ids:
+        image = Image.objects.get(id=img)
+        image.status = 1
+        image.save()
+    create_log(user=request.user,
+                desc=f"{request.user.username} infer image id  {image_ids}")
+    return Response(
+        {
+            'message': 'Completed',
+        },
+        status=status.HTTP_200_OK
+    )    
