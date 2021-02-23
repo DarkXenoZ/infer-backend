@@ -39,9 +39,8 @@ def save_image(project_id):
     print(instance.name)
 
 @shared_task
-def infer_image(project,pipeline,image_ids):
+def infer_image(project,pipeline,image_ids,user):
     images = []
-    image_ids = image_ids
     for img in image_ids:
         try:
             image = Image.objects.get(id=img)

@@ -643,7 +643,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Pipeline')
         image_ids = request.data["image_ids"]
-        return infer_image(project,pipeline,image_ids)
+        return infer_image(project,pipeline,image_ids,user)
 
     @action (detail=True, methods=['GET'],)
     def test(self, request, pk=None):
