@@ -25,11 +25,15 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/user/
 	POST	/api/user/		(username,password,first_name,last_name,email)
 	GET	/api/user/<username>/
+	DELETE	/api/user/<username>/
+	PUT	/api/user/<username>/		(first_name | last_name | email)
 	GET	/api/user/<username>/project/
 	PUT	/api/user/<username>/change_password	(password)
 	GET	/api/project/	
 	POST	/api/project/	(name,description,task,cover,predclasses) predclasses ex : covid,normal
 	GET	/api/project/<project_id>/
+	PUT	/api/project/<project_id>/		(name | pipeline_id | model_name | operator | accuracy | description)
+	DELETE	/api/project/<project_id>/
 	POST	/api/project/<project_id>/add_user/		(username)	
 	DELETE	/api/project/<project_id>/remove_user/	(username)
 	GET	/api/project/<project_id>/list_pipeline/	(id)
@@ -41,6 +45,8 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/project/<project_id>/list_image/
 	GET	/api/pipeline/
 	GET	/api/pipeline/<pipeline_id>
+	PUT	/api/pipeline/<pipeline_id>		(cover | description)
+	DELETE	/api/pipeline/<pipeline_id>
 	GET	/api/image/
 	GET	/api/image/<image_id>
 	PUT	/api/image/<image_id>/verify_image/	(actual_class,note)
