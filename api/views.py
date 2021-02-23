@@ -337,6 +337,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'], )    
     def add_user(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -369,6 +371,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
     @action(detail=True, methods=['DELETE'], )    
     def remove_user(self, request,pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -393,6 +397,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
     @action (detail=True, methods=['POST'],)
     def add_pipeline(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
         try:
             project = Project.objects.get(id=pk)
         except:
@@ -645,10 +651,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         image_ids = request.data["image_ids"]
         return infer_image(project,pipeline,image_ids,user)
 
-    @action (detail=True, methods=['GET'],)
-    def test(self, request, pk=None):
-        save_image.delay(pk)
-        
+
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
@@ -672,6 +675,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
     def create(self, request, pk=None):
         return err_not_allowed
     
+    def destroy(self,request, pk=None):
+        return err_not_allowed
 
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()

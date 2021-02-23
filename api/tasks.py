@@ -32,11 +32,6 @@ def mock_heatmap(img):
     superimposed_img = jet_heatmap * 0.4 + img
     superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
     return superimposed_img
-# To use run save_image.delay(args)
-@shared_task
-def save_image(project_id):
-    instance = Project.objects.get(id=project_id)
-    print(instance.name)
 
 @shared_task
 def infer_image(project,pipeline,image_ids,user):
