@@ -847,7 +847,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         for diag in request.data['actual_class'] :
             if diag not in image.project.predclasses:
                 return not_found('predClass')
-        image.actual_class = request.data['actual_class']
+        image.actual_class = request.data['actual_class'].split(",")
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
