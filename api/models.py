@@ -34,11 +34,11 @@ class Project(models.Model):
 
 class Pipeline(models.Model):
     name = models.CharField(max_length=50)
-    pipeline_id = models.CharField(max_length=40,default="Empty")
+    pipeline_id = models.CharField(max_length=40)
     operator =  models.CharField(max_length=50)
     accuracy = models.FloatField(blank=True,default=0.0)
     description = models.CharField(max_length=500,default='')
-    model_name = models.CharField(max_length=50,default="no name")
+    model_name = models.CharField(max_length=50)
     project = models.ForeignKey(
         Project,
         related_name='pipeline',
