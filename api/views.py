@@ -437,24 +437,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['users',])
         if response[0] != 0:
             return response[1]
-        for username in request.data["users"]:
+        project.users.all().delete()
+        users = request.data["users"].split(',')
+        for username in users:
             try:
                 user = User.objects.get(username=username)
             except:
                 return not_found('Username')
-            try:
-                Project.objects.get(name=project.name,users=user)
-                return Response(
-                    {'message': "The user already join in a project"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except:
-                project.users.add(user)
+            project.users.add(user)
         project.save()
         users = ', '.join(users)
         return Response(
         {
-            'message': f'{user} are joined',
+            'message': f'{users} are joined',
             'result': UserProjectSerializer(project, many=False).data,
         },
         status=status.HTTP_200_OK
