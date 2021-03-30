@@ -327,8 +327,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         proj['description'] = request.data['description']
         proj['cover'] = request.data['cover']
         proj['task'] = request.data['task']
-        proj['predClasses'] = request.data['predClasses'].split(',')
-        print(proj['predClasses'])
+        proj['predclasses'] = request.data['predclasses'].split(',')
+        print(proj['predclasses'])
         try:
             Project.objects.get(name=proj['name'])
             return Response(
