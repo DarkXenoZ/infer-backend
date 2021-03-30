@@ -182,6 +182,33 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK
             )
 
+    @action(methods=['PUT'],detail=True )    
+    def update_batch(self, request,pk=None):
+        if pk != request.user.username and not request.user.is_staff:
+            return err_no_permission
+        try:
+            users = request.data["users"].split(',')
+        except:
+            return err_invalid_input
+        for username in users:
+            try:
+                user = User.objects.get(username=username)
+                try:
+                    user.first_name = request.data["first_name"]
+                except:
+                    pass
+                try:
+                    user.last_name = request.data["last_name"]
+                except:
+                    pass
+                try:
+                    user.email = request.data["email"]
+                except:
+                    pass
+            except:
+                return err_invalid_input
+        
+
     def destroy(self, request, pk=None):
         if not request.user.is_staff:
             return err_no_permission
@@ -371,9 +398,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 project.predclasses = request.data["predclasses"].split(',')
             except:
                 pass
-            project.save()
         except:
             return err_invalid_input
+        project.save()
         return Response(
                 ProjectSerializer(project, many=False).data,
                 status=status.HTTP_200_OK
@@ -441,6 +468,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
     @action(detail=True, methods=['DELETE'], )    
     def remove_user(self, request,pk=None):
         if not request.user.is_staff:
