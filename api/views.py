@@ -183,8 +183,8 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
     @action(methods=['PUT'],detail=True )    
-    def update_batch(self, request,pk=None):
-        if pk != request.user.username and not request.user.is_staff:
+    def update_batch(self, request):
+        if not request.user.is_staff:
             return err_no_permission
         try:
             users = request.data["users"].split(',')
