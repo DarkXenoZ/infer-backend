@@ -451,9 +451,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             except:
                 project.users.add(user)
         project.save()
+        users = ', '.join(users)
         return Response(
         {
-            'message': f'{', '.join(users)} are joined',
+            'message': f'{user} are joined',
             'result': UserProjectSerializer(project, many=False).data,
         },
         status=status.HTTP_200_OK
