@@ -437,7 +437,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['users',])
         if response[0] != 0:
             return response[1]
-        for username in request.data["users"]
+        for username in request.data["users"]:
             try:
                 user = User.objects.get(username=username)
             except:
