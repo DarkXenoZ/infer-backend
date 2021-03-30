@@ -437,7 +437,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['users',])
         if response[0] != 0:
             return response[1]
-        project.users.all().delete()
+        project.users.clear()
         users = request.data["users"].split(',')
         for username in users:
             try:
