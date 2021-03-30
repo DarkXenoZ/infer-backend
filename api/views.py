@@ -205,9 +205,14 @@ class UserViewSet(viewsets.ModelViewSet):
                     user.email = request.data["email"]
                 except:
                     pass
+                user.save()
             except:
                 return err_invalid_input
-        
+        queryset = User.objects.all()
+        return Response(
+                UserSerializer(queryset, many=True).data,
+                status=status.HTTP_200_OK
+            )
 
     def destroy(self, request, pk=None):
         if not request.user.is_staff:
