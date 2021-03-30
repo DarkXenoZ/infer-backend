@@ -386,12 +386,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             try:
                 project.description = request.data["description"]
             except:
-                print("error desc")
                 pass
             try:
                 project.cover = request.data["cover"]
             except:
-                print("error desc")
                 pass
             try:
                 project.predclasses = request.data["predclasses"].split(',')
