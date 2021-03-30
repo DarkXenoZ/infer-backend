@@ -182,8 +182,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK
             )
 
-    @action(methods=['PUT'],detail=True )    
-    def update_batch(self, request,pk=None):
+    @action(methods=['POST'],detail=True)    
+    def update_batch(self, request):
         if not request.user.is_staff:
             return err_no_permission
         try:
