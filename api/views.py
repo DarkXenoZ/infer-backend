@@ -328,9 +328,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         proj['cover'] = request.data['cover']
         proj['task'] = request.data['task']
         proj['predClasses'] = request.data['predClasses'].split(',')
- 
+        print(proj['predClasses'])
         try:
-            Project.objects.get(name=name)
+            Project.objects.get(name=proj['name'])
             return Response(
                 {'message': "A project's name already exists"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -342,7 +342,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             else:
                 return err_invalid_input  
         create_log(user=request.user,
-                   desc=f"Project: {name} has been created by {request.user.username}" )
+                   desc=f"Project: {proj['name']} has been created by {request.user.username}" )
         return Response(
             {
                 'message': 'The Project has been created',
