@@ -322,12 +322,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ])
         if response[0] != 0:
             return response[1]
-
-        name = str(request.data['name'])
-        # description = request.data['description']
-        # cover = request.data['cover']
-        # task = request.data['task']
-        # pred = request.data['predClasses']
+        proj={}
+        proj['name'] = str(request.data['name'])
+        proj['description'] = request.data['description']
+        proj['cover'] = request.data['cover']
+        proj['task'] = request.data['task']
+        proj['predClasses'] = request.data['predClasses'].split(',')
  
         try:
             Project.objects.get(name=name)
@@ -336,7 +336,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            project_serializer = ProjectSerializer(data=request.data)
+            project_serializer = ProjectSerializer(data=proj)
             if project_serializer.is_valid():
                 project_serializer.save() 
             else:
