@@ -383,23 +383,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return err_no_permission
         try:
             project = Project.objects.get(id=pk)
-        except:
-            return err_not_found
-        try:
             try:
                 project.description = request.data["description"]
             except:
+                print("error desc")
                 pass
             try:
                 project.cover = request.data["cover"]
             except:
+                print("error desc")
                 pass
             try:
                 project.predclasses = request.data["predclasses"].split(',')
             except:
                 pass
         except:
-            return err_invalid_input
+            return err_not_found
         project.save()
         return Response(
                 ProjectSerializer(project, many=False).data,
