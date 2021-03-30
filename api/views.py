@@ -418,6 +418,39 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return err_not_found
         return Response(status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['POST'], )    
+    def add_user_batch(self, request, pk=None):
+        if not request.user.is_staff:
+            return err_no_permission
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        response = check_arguments(request.data, ['users',])
+        if response[0] != 0:
+            return response[1]
+        for username in request.data["users"]
+            try:
+                user = User.objects.get(username=username)
+            except:
+                return not_found('Username')
+            try:
+                Project.objects.get(name=project.name,users=user)
+                return Response(
+                    {'message': "The user already join in a project"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except:
+                project.users.add(user)
+        project.save()
+        return Response(
+        {
+            'message': f'{', '.join(users)} are joined',
+            'result': UserProjectSerializer(project, many=False).data,
+        },
+        status=status.HTTP_200_OK
+        )
+
     @action(detail=True, methods=['GET'], )    
     def list_pipeline(self, request, pk=None):
         try:
