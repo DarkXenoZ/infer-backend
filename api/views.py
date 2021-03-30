@@ -367,6 +367,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 project.cover = request.data["cover"]
             except:
                 pass
+            try:
+                project.predclasses = request.data["predclasses"].split(',')
+            except:
+                pass
             project.save()
         except:
             return err_invalid_input
