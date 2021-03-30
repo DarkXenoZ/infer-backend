@@ -389,6 +389,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=pk)
             try:
+                project.description = request.data["name"]
+            except:
+                pass
+            try:
+                project.description = request.data["task"]
+            except:
+                pass
+            try:
                 project.description = request.data["description"]
             except:
                 pass
