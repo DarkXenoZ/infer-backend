@@ -547,7 +547,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        response = check_arguments(request.data, ['name','pipeline_id','description','operator'])
+        response = check_arguments(request.data, ['name','pipeline_id','description','operator','model_name'])
         if response[0] != 0:
             return response[1]
         
@@ -555,6 +555,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         pipeline_id = request.data['pipeline_id']
         desc = request.data['description']
         operator = request.data['operator']
+        model_name = request.data['model_name']
         try:
             Pipeline.objects.get(name=name)
             return Response(
@@ -570,7 +571,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project,operator=operator)
+            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project,operator=operator,model_name=model_name)
         try:
             pipeline.full_clean()
         except ValidationError as ve:
