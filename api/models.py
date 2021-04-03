@@ -97,12 +97,12 @@ class PredictResult(models.Model):
     pipeline = models.ForeignKey(
         Pipeline,
         related_name='result',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
     image = models.ForeignKey(
         Image,
         related_name='result',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
     class Meta:
         unique_together = ('pipeline','image')
@@ -113,17 +113,17 @@ class Queue(models.Model):
     project = models.ForeignKey(
         Project,
         related_name='queue',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
     pipeline = models.ForeignKey(
         Pipeline,
         related_name='queue',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
     image = models.ForeignKey(
         Image,
         related_name='queue',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
 
 class Log(models.Model):
