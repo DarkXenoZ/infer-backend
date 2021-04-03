@@ -338,7 +338,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     
     def list(self, request):
         queryset = Project.objects.all()
-        serializer_class = ProjectSerializer
+        serializer_class = UserProjectSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
 
