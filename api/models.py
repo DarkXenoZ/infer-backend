@@ -97,11 +97,13 @@ class PredictResult(models.Model):
     pipeline = models.ForeignKey(
         Pipeline,
         related_name='result',
+        null=True,
         on_delete=models.SET_NULL,
     )
     image = models.ForeignKey(
         Image,
         related_name='result',
+        null=True,
         on_delete=models.SET_NULL,
     )
     class Meta:
@@ -113,16 +115,19 @@ class Queue(models.Model):
     project = models.ForeignKey(
         Project,
         related_name='queue',
+        null=True,
         on_delete=models.SET_NULL,
     )
     pipeline = models.ForeignKey(
         Pipeline,
         related_name='queue',
+        null=True,
         on_delete=models.SET_NULL,
     )
     image = models.ForeignKey(
         Image,
         related_name='queue',
+        null=True,
         on_delete=models.SET_NULL,
     )
 
