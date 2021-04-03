@@ -507,7 +507,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-
+    #not used
     @action(detail=True, methods=['DELETE'], )    
     def remove_user(self, request,pk=None):
         if not request.user.is_staff:
