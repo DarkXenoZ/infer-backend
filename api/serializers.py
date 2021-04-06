@@ -73,7 +73,7 @@ class UserProjectSerializer(serializers.ModelSerializer):
     users = OnlyUserSerializer(many=True)
     class Meta:
         model = Project
-        fields = ("id","name","description","users","task","predclasses")
+        fields = ("id","name","description","users","task","cover","predclasses")
 
 class UploadImageSerializer(serializers.ModelSerializer):
     class Meta:
