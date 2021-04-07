@@ -322,11 +322,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         total = sum(diag_list.values())
         for i in diag_list: 
             diag_list[i] = diag_list[i]/total
-        
+        pipelines = Pipeline.objects.filter(project=project)
         return Response(
             {
                 'project': UserProjectSerializer(project, many=False).data,
                 'predicted': diag_list,
+                'pipelines': PipelineSerializer(pipelines,many=True).data,
                 'uploaded' : status_count[0],
                 'in process': status_count[1],
                 'ai-annotated' : status_count[2],
@@ -542,7 +543,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        response = check_arguments(request.data, ['name','pipeline_id','description','operator'])
+        response = check_arguments(request.data, ['name','pipeline_id','description','operator','clara_pipeline_name'])
         if response[0] != 0:
             return response[1]
         
@@ -550,6 +551,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         pipeline_id = request.data['pipeline_id']
         desc = request.data['description']
         operator = request.data['operator']
+        clara_pipeline_name = request.data['clara_pipeline_name']
         try:
             Pipeline.objects.get(name=name)
             return Response(
@@ -565,7 +567,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            pipeline = Pipeline.objects.create(name=name,pipeline_id=pipeline_id,description=desc,project=project,operator=operator)
+            pipeline = Pipeline.objects.create(
+                name=name,pipeline_id=pipeline_id,
+                description=desc,
+                project=project,
+                operator=operator,
+                clara_pipeline_name=clara_pipeline_name
+                )
         try:
             pipeline.full_clean()
         except ValidationError as ve:
@@ -841,6 +849,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
                 pass
             try:
                 pipeline.description = request.data["description"]
+            except:
+                pass
+            try:
+                pipeline.pipeline_id = request.data["clara_pipeline_name"]
             except:
                 pass
             pipeline.save()
