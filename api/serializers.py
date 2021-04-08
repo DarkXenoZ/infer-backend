@@ -71,7 +71,7 @@ class PipelineSerializer(serializers.ModelSerializer):
 
 class UserProjectSerializer(serializers.ModelSerializer):
     users = OnlyUserSerializer(many=True)
-    pipelines = PipelineSerializer(many=True)
+    pipeline = PipelineSerializer(many=True)
     class Meta:
         model = Project
         fields = ("id","name","description","pipeline","users","task","cover","predclasses")
