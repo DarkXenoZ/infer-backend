@@ -442,21 +442,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return response[1]
         project.users.clear()
         users = request.data["users"].split(',')
-        for username in users:
-            try:
-                user = User.objects.get(username=username)
-            except:
-                return not_found('Username')
-            project.users.add(user)
-        project.save()
-        users = ', '.join(users)
-        return Response(
-        {
-            'message': f'{users} are joined',
-            'result': UserProjectSerializer(project, many=False).data,
-        },
-        status=status.HTTP_200_OK
-        )
+        if users== [""]:
+            project.save()
+            return Response(
+            {
+                'message': 'set to empty',
+                'result': UserProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+            )
+        else:
+            for username in users:
+                try:
+                    user = User.objects.get(username=username)
+                except:
+                    return not_found('Username')
+                project.users.add(user)
+            project.save()
+            users = ', '.join(users)
+            return Response(
+            {
+                'message': f'{users} are joined',
+                'result': UserProjectSerializer(project, many=False).data,
+            },
+            status=status.HTTP_200_OK
+            )
 
     @action(detail=True, methods=['GET'], )    
     def list_pipeline(self, request, pk=None):
