@@ -442,6 +442,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return response[1]
         project.users.clear()
         users = request.data["users"].split(',')
+        print(f"--------{users}--------")
         if users== [""]:
             project.save()
             return Response(
