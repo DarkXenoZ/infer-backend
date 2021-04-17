@@ -56,8 +56,6 @@ def check_arguments(request_arr, args):
     for arg in args:
         if arg not in request_arr:
             missing.append(arg)
-        elif request_arr[arg] == "" :
-            missing.append(arg)
     if missing:
         response = {
             'Missing argument': '%s' % ', '.join(missing),
