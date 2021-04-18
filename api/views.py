@@ -323,15 +323,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         for i in diag_list: 
             diag_list[i] = diag_list[i]/total
         pipelines = Pipeline.objects.filter(project=project)
+        fstatus = {'uploaded' : status_count[0],
+                'in process': status_count[1],
+                'ai-annotated' : status_count[2],
+                'verified' : status_count[3]}
         return Response(
             {
                 'project': UserProjectSerializer(project, many=False).data,
                 'predicted': diag_list,
                 'pipelines': PipelineSerializer(pipelines,many=True).data,
-                'uploaded' : status_count[0],
-                'in process': status_count[1],
-                'ai-annotated' : status_count[2],
-                'verified' : status_count[3],
+                'status' : fstatus,
                 'result' : ImageSerializer(images,many=True).data,
             },
             status=status.HTTP_200_OK
