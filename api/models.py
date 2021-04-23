@@ -147,19 +147,19 @@ class Queue(models.Model):
         Project,
         related_name='queue',
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     pipeline = models.ForeignKey(
         Pipeline,
         related_name='queue',
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     image = models.ForeignKey(
         Image,
         related_name='queue',
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
 
 class Log(models.Model):
