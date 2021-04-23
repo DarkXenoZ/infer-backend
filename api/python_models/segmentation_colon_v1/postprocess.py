@@ -6,9 +6,11 @@ def postprocess(results,image,predResult):
     results = (1- results)*255
     print(results)
     os.makedirs("tmp", exist_ok=True)
-    x=cv2.imwrite("tmp/"+ image,results)
+
+    name = image.split('/')[-1]
+    x=cv2.imwrite("tmp/"+ name,results)
     print(x)
-    f= open("tmp/"+ image,'rb')
+    f= open("tmp/"+ name,'rb')
     predResult.predicted_mask = File(f)
     predResult.save()
     image.status = 2
