@@ -70,7 +70,7 @@ def infer_image(project,pipeline,image,user):
     q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
     q.delete()
     create_log(user=user,
-                desc=f"{user.username} infer image id  {image.id}")
+                desc=f"{user.username} infer image id  {image[1].id}")
     return Response(
         {
             'message': 'Completed',
