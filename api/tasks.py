@@ -19,7 +19,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import tritonclient.grpc as grpcclient
 from django.core.files import File
 import importlib
-from models
+
 
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
