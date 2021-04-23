@@ -19,6 +19,7 @@ def get_preprocessing_segment_colon(image):
 
 def preprocess(Input):
     Input = cv2.imread(str(Input))
+    print(type(Input))
     Input = get_preprocessing_segment_colon(Input)
 
     return Input
