@@ -8,5 +8,5 @@ opencv-python
 tensorflow
 numpy
 matplotlib
-celery
+celery  
 tritonclient[grpc]
