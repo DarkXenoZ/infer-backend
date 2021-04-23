@@ -10,3 +10,5 @@ numpy
 matplotlib
 celery  
 tritonclient[grpc]
+albumentations
+segmentation-models-pytorch
