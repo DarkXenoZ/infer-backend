@@ -52,7 +52,7 @@ def infer_image(project,pipeline,image,user):
     tritonClient = grpcclient.InferenceServerClient(url=url)
 
     preprocess_module_name = "python_models."+pipeline.model_name + ".preprocess"
-    print(type(preprocess_module_name))
+    print(type(preprocess_module_name),preprocess_module_name)
     preprocessModule = importlib.import_module(preprocess_module_name)
     preprocessImage = preprocessModule.preprocess(image[0])
     netInput = grpcclient.InferInput(pipeline.netInputname, preprocessImage.shape, "FP32")
