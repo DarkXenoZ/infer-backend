@@ -53,7 +53,7 @@ def infer_image(project,pipeline,image,user):
 
     # preprocess_module_name = "models."+pipeline.model_name + ".preprocess"
     # preprocessModule = importlib.import_module("preprocess",package=preprocess_module_name)
-    spec = importlib.util.spec_from_file_location("preprocess", "models/"+pipeline.model_name+"/preprocess")
+    spec = importlib.util.spec_from_file_location("preprocess", "/backend/api/models/"+pipeline.model_name+"/preprocess")
     preprocessModule = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(preprocessModule)
     preprocessImage = preprocessModule.preprocess(image[0])
@@ -66,7 +66,7 @@ def infer_image(project,pipeline,image,user):
     
     # postprocess_module_name = "models."+pipeline.model_name + ".postprocess"
     # postprocessModule = importlib.import_module("postprocess",package=postprocess_module_name)
-    spec = importlib.util.spec_from_file_location("postprocess", "models/"+pipeline.model_name+"/postprocess")
+    spec = importlib.util.spec_from_file_location("postprocess", "/backend/api/models/"+pipeline.model_name+"/postprocess")
     postprocessModule = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(postprocessModule)
     postprocessModule.postprocess(Output,image,predResult)
