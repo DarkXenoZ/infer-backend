@@ -11,7 +11,10 @@ def postprocess(results,image,predResult):
     name = image.split('/')[-1]
     filepath = "media/mask/"+ name
     imageio.imwrite(filepath,results)
-    predResult.predicted_mask.append(filepath)
+    if predResult.predicted_mask is None:
+        predResult.predicted_mask = [filepath]
+    else:
+        predResult.predicted_mask.append(filepath)
     predResult.save()
     image.status = 2
     image.save()
