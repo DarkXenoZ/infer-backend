@@ -51,7 +51,7 @@ def infer_image(project,pipeline,image,user):
     url = os.getenv('TRTIS_URL')
     tritonClient = grpcclient.InferenceServerClient(url=url)
 
-    preprocess_module_name = ".models."+pipeline.model_name + ".preprocess"
+    preprocess_module_name = "models."+pipeline.model_name + ".preprocess"
     preprocessModule = importlib.import_module(preprocess_module_name, package=__package__)
 
     preprocessImage = preprocessModule.preprocess(image[0])
@@ -62,7 +62,7 @@ def infer_image(project,pipeline,image,user):
     Output = Output.as_numpy(pipeline.netOutputName) # output numpy array!
     predResult = PredictResult.objects.get(pipeline=pipeline,image=image)
     
-    postprocess_module_name = ".models."+pipeline.model_name + ".postprocess"
+    postprocess_module_name = "models."+pipeline.model_name + ".postprocess"
     postprocessModule = importlib.import_module(postprocess_module_name, package=__package__)
     postprocessModule.postprocess(Output,image,predResult)
     q = Queue.objects.get(project=project,pipeline=pipeline,image=image)
