@@ -128,14 +128,14 @@ class PredictResult(models.Model):
         related_name='result',
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     image3D = models.ForeignKey(
         Image3D,
         related_name='result',
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     class Meta:
         unique_together = ('pipeline','image')
