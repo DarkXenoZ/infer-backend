@@ -16,5 +16,5 @@ def postprocess(results,image,predResult):
     else:
         predResult.predicted_mask.append(filepath)
     predResult.save()
-    image.status = 2
-    image.save()
+    image[1].status = 2
+    image[1].save()
