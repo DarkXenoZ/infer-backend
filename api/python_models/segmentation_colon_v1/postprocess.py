@@ -3,9 +3,9 @@ from django.core.files import File
 def postprocess(results,image,predResult):
     results = results.squeeze().round()
     results = (1- results)*255
-    x=cv2.imwrite("/tmp/"+ image,results)
-    print(x)
-    f= open("/tmp/"+ image,'rb')
+    os.makedirs("tmp", exist_ok=True)
+    x=cv2.imwrite("tmp/"+ image,results)
+    f= open("tmp/"+ image,'rb')
     predResult.predicted_mask = File(f)
     predResult.save()
     image.status = 2
