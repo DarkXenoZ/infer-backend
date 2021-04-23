@@ -103,7 +103,7 @@ class Image3D(models.Model):
     note = models.CharField(max_length=300,null=True,blank=True,default=" ")
     project = models.ForeignKey(
         Project,
-        related_name='images',
+        related_name='images3d',
         default=None,
         blank=True,
         null=True,
