@@ -1,5 +1,6 @@
 import cv2
 from django.core.files import File
+import os
 def postprocess(results,image,predResult):
     results = results.squeeze().round()
     results = (1- results)*255
