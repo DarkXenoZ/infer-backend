@@ -1,4 +1,4 @@
-import cv2
+import imageio
 from django.core.files import File
 import os
 def postprocess(results,image,predResult):
@@ -8,7 +8,7 @@ def postprocess(results,image,predResult):
     os.makedirs("tmp", exist_ok=True)
 
     name = image.split('/')[-1]
-    x=cv2.imwrite("tmp/"+ name,results)
+    x=imageio.imwrite("tmp/"+ name,results)
     print(x)
     f= open("tmp/"+ name,'rb')
     predResult.predicted_mask = File(f)
