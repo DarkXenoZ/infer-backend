@@ -16,6 +16,9 @@ import matplotlib.cm as cm
 import PIL
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
+import tritonclient.grpc as grpcclient
+from django.core.files import File
+import importlib
 
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
@@ -41,57 +44,32 @@ def mock_heatmap(img):
     superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
     return superimposed_img
 
-@shared_task
-def infer_image(project,pipeline,image_ids,user):
-    images = []
-    for img in image_ids:
-        try:
-            image = Image.objects.get(id=img)
-            images.append((image.data8.name,image))
-        except:
-            return not_found(f'Image (id:{img})')
 
-    tmp_path = os.path.join("tmp","")
-    file_path = os.path.join("media","")
-    os.makedirs("tmp", exist_ok=True)
-    for img in images:
-        output1 = subprocess.check_output(
-            f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
-            shell=True, 
-            encoding='UTF-8'
-        )
-        line = output1.split('\n')
-        job = (line[0].split(':'))[1]
-        output2 = subprocess.check_output(
-            f"/root/claracli/clara start job -j {job} ",
-            shell=True,
-            encoding='UTF-8'
-        )
-        try:
-            img_nograd = img[0]
-            img_io = io.BytesIO()
-            img_grad = mock_heatmap(img_nograd)
-            img_grad.save(img_io, format='PNG')
-            result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
-            result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
-            result.save()
-        except:
-            return Response(
-                {
-                    "message":"This image infered with The pipeline"
-                },status=status.HTTP_400_BAD_REQUEST
-            )
-        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
-        q.save()
-    for img in image_ids:
-        image = Image.objects.get(id=img)
-        image.status = 1
-        image.save()
+@shared_task
+def infer_image(project,pipeline,image,user):
+    url = os.getenv('TRTIS_URL')
+    tritonClient = grpcclient.InferenceServerClient(url=url)
+
+    preprocess_module_name = "models"+pipeline.model_name + "preprocess"
+    preprocessModule = importlib.import_module(preprocess_module_name)
+
+    preprocessImage = preprocessModule.preprocess(image[0])
+    netInput = grpcclient.InferInput(pipeline.netInputname, preprocessImage.shape, "FP32")
+    netOutput = grpcclient.InferRequestedOutput(pipeline.netOutputName)
+    netInput.set_data_from_numpy(preprocessImage)
+    Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=[netOutput])
+    Output = Output.as_numpy(pipeline.netOutputName) # output numpy array!
+    predResult = PredictResult.objects.get(pipeline=pipeline,image=image)
+
+    postprocess_module_name = pipeline.model_name + "postprocess"
+    postprocessModule = importlib.import_module(postprocess_module_name)
+    postprocessModule.postprocess(Output,image,predResult)
+        
     create_log(user=user,
-                desc=f"{user.username} infer image id  {image_ids}")
+                desc=f"{user.username} infer image id  {image.id}")
     return Response(
         {
             'message': 'Completed',
         },
         status=status.HTTP_200_OK
-    )    
+    )
