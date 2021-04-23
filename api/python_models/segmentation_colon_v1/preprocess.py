@@ -3,6 +3,9 @@ import segmentation_models_pytorch as smp
 import numpy as np
 import cv2
 
+def to_tensor(x, **kwargs):
+    return x.transpose(2, 0, 1).astype('float32')
+
 def get_preprocessing_segment_colon(image):
     
     _transform = [
