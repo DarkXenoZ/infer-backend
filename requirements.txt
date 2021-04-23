@@ -9,5 +9,4 @@ tensorflow
 numpy
 matplotlib
 celery
-nvidia-pyindex
 tritonclient[grpc]
