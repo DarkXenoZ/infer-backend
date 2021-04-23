@@ -57,10 +57,10 @@ def infer_image(project,pipeline,image,user):
     # exec(f'"import python_models.{pipeline.model_name}.preprocess as preprocessModule"')
     preprocessImage = preprocessModule.preprocess(image[0])
     netInput = grpcclient.InferInput(pipeline.netInputname, preprocessImage.shape, "FP32")
-    netOutput = grpcclient.InferRequestedOutput(pipeline.netOutputName)
+    netOutput = grpcclient.InferRequestedOutput(pipeline.netInputname)
     netInput.set_data_from_numpy(preprocessImage)
     Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=[netOutput])
-    Output = Output.as_numpy(pipeline.netOutputName) # output numpy array!
+    Output = Output.as_numpy(pipeline.netOutputname) # output numpy array!
     predResult = PredictResult.objects.get(pipeline=pipeline,image=image)
     
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
