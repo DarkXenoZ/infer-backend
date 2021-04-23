@@ -861,9 +861,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             for img in images:
                 q = Queue.objects.create(project=project,pipeline=pipeline,image=img[1])
                 q.save()
-                infer_image(project,pipeline,img,user)
                 result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
                 result.save()
+                infer_image(project,pipeline,img,user)
         create_log(
             user=user,
             desc=f"{user.username} infer image id  {image_ids}"
