@@ -555,7 +555,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        response = check_arguments(request.data, ['name','pipeline_id','description','operator','clara_pipeline_name'])
+        response = check_arguments(
+            request.data, 
+            ["name","pipeline_id","operator","description","clara_pipeline_name","model_name","model_type"]
+            )
         if response[0] != 0:
             return response[1]
         
@@ -564,6 +567,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         desc = request.data['description']
         operator = request.data['operator']
         clara_pipeline_name = request.data['clara_pipeline_name']
+        model_name = request.data['model_name']
+        model_type = request.data['model_type']
         try:
             Pipeline.objects.get(name=name)
             return Response(
@@ -584,7 +589,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 description=desc,
                 project=project,
                 operator=operator,
-                clara_pipeline_name=clara_pipeline_name
+                clara_pipeline_name=clara_pipeline_name,
+                model_type=model_type,
+                model_name=model_name
                 )
         try:
             pipeline.full_clean()
@@ -606,7 +613,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    
+    ####
     @action (detail=True, methods=['GET'],)
     def list_image(self, request, pk=None):
         try:
@@ -628,43 +635,44 @@ class ProjectViewSet(viewsets.ModelViewSet):
             images_in_process = Image.objects.filter(project=project,status=1)         
             queue = Queue.objects.filter(project=project)
             for q in queue:
-                check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
-                line_check = check.split('\n')
-                state = (line_check[6].split(':'))[1].strip()
-                ops = (line_check[9].split(':'))[1].strip()
-                if ("1" in ops )and("STOPPED" in state):
-                    output = subprocess.check_output(
-                        f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
-                        shell=True, 
-                        encoding='UTF-8'
-                    )
-                    q.delete()
-            files_path= glob.glob("tmp/*.csv")
-            for file_path in files_path:
-                with open(file_path, 'r') as f: 
-                    csvReader = csv.reader(f) 
-                    for rows in csvReader: 
-                        pred = {}
-                        for result in rows[1:]:
-                            diag, precision = result.split(":")
-                            pred[diag]=precision
-                        max_diag = max(pred,key=lambda k: pred[k])
-                        pred=json.dumps(pred)
-                        name = rows[0].split("/")[-1]
-                        img = Image.objects.get(data8__contains=name.split('/')[-1])
-                        img.predclass = max_diag
-                        img.status= 2
-                        img.save()
-                        predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                        predResult.predicted_class = pred
-                        predResult.save()
-                os.remove(file_path)
-            return Response(ImageProjectSerializer(project, many=False).data,
-                    status=status.HTTP_200_OK)
+                if q.pipeline.model_type =="CLARA":
+                    check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
+                    line_check = check.split('\n')
+                    state = (line_check[6].split(':'))[1].strip()
+                    ops = (line_check[9].split(':'))[1].strip()
+                    if ("1" in ops )and("STOPPED" in state):
+                        output = subprocess.check_output(
+                            f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
+                            shell=True, 
+                            encoding='UTF-8'
+                        )
+                        q.delete()
+                    files_path= glob.glob("tmp/*.csv")
+                    for file_path in files_path:
+                        with open(file_path, 'r') as f: 
+                            csvReader = csv.reader(f) 
+                            for rows in csvReader: 
+                                pred = {}
+                                for result in rows[1:]:
+                                    diag, precision = result.split(":")
+                                    pred[diag]=precision
+                                max_diag = max(pred,key=lambda k: pred[k])
+                                pred=json.dumps(pred)
+                                name = rows[0].split("/")[-1]
+                                img = Image.objects.get(data__contains=name.split('/')[-1])
+                                img.predclass = max_diag
+                                img.status= 2
+                                img.save()
+                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                predResult.predicted_class = pred
+                                predResult.save()
+                        os.remove(file_path)
         except:
             print('no in process')
             return Response(ImageProjectSerializer(project, many=False).data,
                         status=status.HTTP_200_OK)
+        return Response(ImageProjectSerializer(project, many=False).data,
+                    status=status.HTTP_200_OK)
 
     @action (detail=True, methods=['GET'],)
     def list_uninfer_image(self, request, pk=None):
@@ -721,8 +729,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imageio.imwrite(png_name, img)
             
         f= open(png_name,'rb')
-        imgs['data8'] = File(f)
-        imgs['data16'] = File(f)
+        imgs['data'] = File(f)
         imgs['status'] = 0
         imgs['project'] = project.pk
         img_serializer = UploadImageSerializer(data=imgs)
@@ -771,8 +778,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs['physician_name'] =  request.data['physician_name']
         imgs['patient_age'] =  request.data['patient_age']
         imgs['content_date'] = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
-        imgs['data8'] = request.data['image']
-        imgs['data16'] = request.data['image']
+        imgs['data'] = request.data['image']
         imgs['name'] = request.data['image'].name
         imgs['status'] = 0
         imgs['project'] = project.pk
@@ -809,7 +815,66 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Pipeline')
         image_ids = request.data["image_ids"]
-        return infer_image(project,pipeline,image_ids,user)
+        images = []
+        for img in image_ids:
+            try:
+                image = Image.objects.get(id=img)
+                images.append((image.data.name,image))
+                image.status = 1
+                image.save()
+            except:
+                return not_found(f'Image (id:{img})')
+        if pipeline.model_type == "CLARA":
+            tmp_path = os.path.join("tmp","")
+            file_path = os.path.join("media","")
+            os.makedirs("tmp", exist_ok=True)
+            for img in images:
+                output1 = subprocess.check_output(
+                    f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
+                    shell=True, 
+                    encoding='UTF-8'
+                )
+                line = output1.split('\n')
+                job = (line[0].split(':'))[1]
+                output2 = subprocess.check_output(
+                    f"/root/claracli/clara start job -j {job} ",
+                    shell=True,
+                    encoding='UTF-8'
+                )
+                try:
+                    img_nograd = img[0]
+                    img_io = io.BytesIO()
+                    img_grad = mock_heatmap(img_nograd)
+                    img_grad.save(img_io, format='PNG')
+                    result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                    result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
+                    result.save()
+                except:
+                    return Response(
+                        {
+                            "message":"This image infered with The pipeline"
+                        },status=status.HTTP_400_BAD_REQUEST
+                    )
+                q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
+                q.save()
+        else:
+            for img in images:
+                q = Queue.objects.create(project=project,pipeline=pipeline,image=img[1])
+                q.save()
+                infer_image(project,pipeline,img,user)
+                result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                result.save()
+        create_log(
+            user=user,
+            desc=f"{user.username} infer image id  {image_ids}"
+        )
+        return Response(
+            {
+                'message': 'Completed',
+            },
+            status=status.HTTP_200_OK
+        )
+        
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -867,6 +932,14 @@ class PipelineViewSet(viewsets.ModelViewSet):
                 pipeline.pipeline_id = request.data["clara_pipeline_name"]
             except:
                 pass
+            try:
+                pipeline.pipeline_id = request.data["model_name"]
+            except:
+                pass
+            try:
+                pipeline.pipeline_id = request.data["model_type"]
+            except:
+                pass
             pipeline.save()
         except:
             return err_invalid_input
@@ -921,7 +994,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     
     def create(self, request, pk=None):
         return err_not_allowed
-    
+
     @action (detail=True, methods=['PUT'],)
     def verify_image(self, request, pk=None):
         try:
@@ -945,7 +1018,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         image.verify_by = f'{user.first_name} {user.last_name}'
         image.save()
         create_log(user=request.user,
-                   desc=f"{request.user.username} verify {image.data8.name}")
+                   desc=f"{request.user.username} verify {image.data.name}")
         return Response(
             {
                 'message': 'Image Verified',
@@ -964,8 +1037,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         try:
-            os.remove(os.path.join("media",image.data8.name))
-            os.remove(os.path.join("media",image.data16.name))
+            os.remove(os.path.join("media",image.dat8.name))
         except:
             Response(
             {
@@ -975,7 +1047,104 @@ class ImageViewSet(viewsets.ModelViewSet):
         )        
         image.delete()
         create_log(user=request.user,
-                   desc=f"{request.user.username} delete {image.data8.name}")
+                   desc=f"{request.user.username} delete {image.name}")
+        return Response(
+            {
+                'message': 'Image deleted',
+            },
+            status=status.HTTP_200_OK
+        )        
+
+class Image3DViewSet(viewsets.ModelViewSet):
+    queryset = Image3D.objects.all()
+    serializer_class = Image3DSerializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            image = Image3D.objects.get(id=pk)
+        except:
+            return not_found('Image3D')
+        if image.status >=2 :
+            result = PredictResult.objects.filter(image=image)
+            return Response(
+            {
+                'image': ProjectImage3DSerializer(image, many=False).data,
+                'result': PredictResultSerializer(result,many=True).data,
+            },
+            status=status.HTTP_200_OK
+        )  
+        return Response(
+            {
+                'image':ProjectImage3DSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )      
+    
+    def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        queryset = Image3D.objects.all()
+        serializer_class = Image3DSerializer
+        return Response(serializer_class(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+    
+    def create(self, request, pk=None):
+        return err_not_allowed
+
+    @action (detail=True, methods=['PUT'],)
+    def verify_image(self, request, pk=None):
+        try:
+            image = Image3D.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            user = check_staff_permission(image.project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['actual_class','note'])
+        if response[0] != 0:
+            return response[1]
+        for diag in request.data['actual_class'] :
+            if diag not in image.project.predclasses:
+                return not_found('predClass')
+        image.actual_class = request.data['actual_class']
+        image.status = 3
+        image.note = request.data['note']
+        image.timestamp = datetime.now()
+        image.verify_by = f'{user.first_name} {user.last_name}'
+        image.save()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} verify {image.name}")
+        return Response(
+            {
+                'message': 'Image Verified',
+                'result': Image3DSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+    ####
+    def destroy(self, request, pk=None):
+        try:
+            image = Image3D.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            user = check_staff_permission(image.project, request)
+        except:
+            return err_no_permission
+        try:
+            for img in image.data:
+                os.remove(os.path.join("media",img.name))
+        except:
+            Response(
+            {
+                'message': 'Can not delete the image',
+            },
+            status=status.HTTP_200_OK
+        )        
+        image.delete()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} delete {image.name}")
         return Response(
             {
                 'message': 'Image deleted',
