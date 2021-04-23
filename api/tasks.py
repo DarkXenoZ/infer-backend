@@ -55,7 +55,7 @@ def infer_image(project,pipeline,image,user):
     print(type(preprocess_module_name),preprocess_module_name)
     preprocessModule = importlib.import_module(preprocess_module_name)
     # exec(f'"import python_models.{pipeline.model_name}.preprocess as preprocessModule"')
-    preprocessImage = preprocessModule.preprocess(image[0])
+    preprocessImage = preprocessModule.preprocess(image[1].data)
     netInput = grpcclient.InferInput(pipeline.netInputname, preprocessImage.shape, "FP32")
     netOutput = grpcclient.InferRequestedOutput(pipeline.netOutputName)
     netInput.set_data_from_numpy(preprocessImage)
