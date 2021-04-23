@@ -63,7 +63,7 @@ class Pipeline(models.Model):
     
 class Image(models.Model):
     name = models.CharField(max_length=50)
-    data = models.FileField(upload_to='image3D/')
+    data = models.FileField(upload_to='image/')
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -89,7 +89,7 @@ class Image(models.Model):
 
 class Image3D(models.Model):
     name = models.CharField(max_length=50)
-    data = ArrayField(models.FileField(upload_to='image8/'))
+    data = ArrayField(models.FileField(upload_to='image3D/'))
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
