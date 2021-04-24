@@ -54,7 +54,7 @@ def infer_image(project,pipeline,image,user):
     preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
     print(type(preprocess_module_name),preprocess_module_name)
     preprocessModule = importlib.import_module(preprocess_module_name)
-    # exec(f'"import python_models.{pipeline.model_name}.preprocess as preprocessModule"')
+    
     preprocessImage = preprocessModule.preprocess(image[0])
     netInput = grpcclient.InferInput(pipeline.netInputname, preprocessImage.shape, "FP32")
     netOutput = grpcclient.InferRequestedOutput(pipeline.netOutputname)
@@ -65,7 +65,7 @@ def infer_image(project,pipeline,image,user):
     
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
     postprocessModule = importlib.import_module(postprocess_module_name)
-    # exec(f'"import python_models.{pipeline.model_name}.postprocess as postprocessModule"')
+    
     postprocessModule.postprocess(Output,image,predResult)
     q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
     q.delete()
