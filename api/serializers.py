@@ -10,8 +10,17 @@ class LogSerializer(serializers.ModelSerializer):
         model = Log
         fields = ("desc", "timestamp",)
 
+class PredictResultSerializer(serializers.ModelSerializer):
+    predicted_class = serializers.JSONField()
+    pipeline_name = serializers.CharField(
+        source='pipeline.name'
+    )
+    class Meta:
+        model = PredictResult
+        fields = ("gradcam","pipeline_name","predicted_class","predicted_mask","timestamp")
 
 class ImageSerializer(serializers.ModelSerializer):
+    result = PredictResultSerializer(many=True)
     class Meta:
         model = Image
         fields = (
@@ -19,7 +28,8 @@ class ImageSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","predclass","verify_by","timestamp"
+            "actual_class","predclass",
+            "verify_by","timestamp","result"
             )
 
 class Image3DSerializer(serializers.ModelSerializer):
@@ -58,14 +68,7 @@ class createProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ("id","name","description","task","cover","predclasses")
 
-class PredictResultSerializer(serializers.ModelSerializer):
-    predicted_class = serializers.JSONField()
-    pipeline_name = serializers.CharField(
-        source='pipeline.name'
-    )
-    class Meta:
-        model = PredictResult
-        fields = ("gradcam","pipeline_name","predicted_class","predicted_mask","timestamp")
+
 
 class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
