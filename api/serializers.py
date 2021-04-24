@@ -10,11 +10,17 @@ class LogSerializer(serializers.ModelSerializer):
         model = Log
         fields = ("desc", "timestamp",)
 
+class MaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mask
+        fields = ("mask")
+
 class PredictResultSerializer(serializers.ModelSerializer):
     predicted_class = serializers.JSONField()
     pipeline_name = serializers.CharField(
         source='pipeline.name'
     )
+    predicted_mask = MaskSerializer(many=True)
     class Meta:
         model = PredictResult
         fields = ("gradcam","pipeline_name","predicted_class","predicted_mask","timestamp")
@@ -28,11 +34,17 @@ class ImageSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","predclass",
+            "actual_class","actual_mask","predclass",
             "verify_by","timestamp","result"
             )
 
+class Data3DSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = data3D
+        fields = ("file3d")
+
 class Image3DSerializer(serializers.ModelSerializer):
+    data = Data3DSerializer(many=True)
     class Meta:
         model = Image3D
         fields = (
@@ -40,7 +52,7 @@ class Image3DSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","predclass","verify_by","timestamp"
+            "actual_class","actual_mask","predclass","verify_by","timestamp"
             )
 
 
@@ -121,7 +133,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status","note",
-            "actual_class","verify_by","predclass","timestamp",
+            "actual_class","actual_mask","verify_by","predclass","timestamp",
             "project_name","project_task","project_predclasses"
             )
 
@@ -140,6 +152,7 @@ class ProjectImage3DSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status","note",
-            "actual_class","verify_by","predclass","timestamp",
-            "project_name","project_task","project_predclasses"
+            "actual_class","actual_mask","verify_by",
+            "predclass","timestamp","project_name",
+            "project_task","project_predclasses"
             )
