@@ -65,8 +65,13 @@ def infer_image(project,pipeline,image,user):
     
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
     postprocessModule = importlib.import_module(postprocess_module_name)
-    
-    postprocessModule.postprocess(Output,image,predResult)
+
+    result = postprocessModule.postprocess(Output,image,predResult)
+    mask = Mask()
+    mask.result = predResult
+    mask.mask.name = result
+    image[1].status = 2
+    image[1].save()
     q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
     q.delete()
     create_log(user=user,
