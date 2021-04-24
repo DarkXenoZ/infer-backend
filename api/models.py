@@ -71,6 +71,7 @@ class Image(models.Model):
     physician_name = models.CharField(max_length=50)
     status = models.IntegerField(default=0) # 0:uploaded 1:in process 2:Annotated 3:verified
     actual_class =ArrayField(models.CharField(max_length=50),blank=True,null=True)
+    actual_mask = models.FileField(upload_to='actual_mask/',blank=True,null=True)
     predclass = models.CharField(max_length=50,null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     verify_by = models.CharField(max_length=100,blank=True)
@@ -89,7 +90,6 @@ class Image(models.Model):
 
 class Image3D(models.Model):
     name = models.CharField(max_length=50)
-    data = ArrayField(models.FileField(upload_to='image3D/'))
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -97,6 +97,7 @@ class Image3D(models.Model):
     physician_name = models.CharField(max_length=50)
     status = models.IntegerField(default=0) # 0:uploaded 1:in process 2:Annotated 3:verified
     actual_class =ArrayField(models.CharField(max_length=50),blank=True,null=True)
+    actual_mask = models.FileField(upload_to='actual_mask3D/')
     predclass = models.CharField(max_length=50,null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     verify_by = models.CharField(max_length=100,blank=True)
@@ -110,12 +111,17 @@ class Image3D(models.Model):
         on_delete=models.CASCADE,
     )
 
-    
+class Data3D(models.Model):
+    image3d = models.ForeignKey(
+        Image3D,
+        related_name='data',
+        on_delete = models.CASCADE,
+    )
+    file3d = models.FileField(upload_to='image3D/')    
 
 class PredictResult(models.Model):
     gradcam = models.FileField(upload_to='imagegrad/',null=True,blank=True)
     predicted_class = models.JSONField(null=True,blank=True)
-    predicted_mask = ArrayField(models.FileField(upload_to='mask/',null=True,blank=True),null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     pipeline = models.ForeignKey(
         Pipeline,
@@ -139,6 +145,14 @@ class PredictResult(models.Model):
     )
     class Meta:
         unique_together = ('pipeline','image')
+
+class Mask(models.Model):
+    result = models.ForeignKey(
+        PredictResult,
+        related_name='predicted_mask',
+        on_delete = models.CASCADE,
+    )
+    mask = models.FileField(upload_to='mask/')    
     
 class Queue(models.Model):
     #JOB_ID Queue
