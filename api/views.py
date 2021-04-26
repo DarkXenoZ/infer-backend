@@ -861,7 +861,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
         imgs.name = request.data['image'].name
         imgs.status = 0
-        imgs.project = project.pk
+        imgs.project = project
         imgs.save()
         
         with ZipFile(imgs.name, 'r') as zipObj:
