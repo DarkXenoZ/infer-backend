@@ -759,7 +759,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         img = ds.pixel_array
         png_name = request.data['dicom'].name.replace('.dcm','.png')
         imgs['name']=png_name
-        imageio.imwrite(png_name, img)
+        cv2.imwrite(png_name, img)
             
         f= open(png_name,'rb')
         imgs['data'] = File(f)
