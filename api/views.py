@@ -758,7 +758,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
             
         img = ds.pixel_array
-        img = np.expand_dims(x, axis=2)
+        img = np.expand_dims(img, axis=2)
         z = np.zeros(img.shape[:-1] + (2,), dtype=img.dtype)
         img = np.concatenate((img, z), axis=-1)
 
