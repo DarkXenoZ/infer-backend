@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import ArrayField,JSONField
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, \
     MinValueValidator, MaxValueValidator
-
+import os
 # Class project
 class Project(models.Model):
     TASK_CHOICES = (
@@ -90,9 +90,12 @@ class Image(models.Model):
     class Meta:
         unique_together = ('name',)
 
+def content_file_name(instance, filename):
+        return os.path.join("image3D",filename)
+
 class Image3D(models.Model):
     name = models.CharField(max_length=50)
-    data = models.FileField(upload_to=f'image3D/{name}')
+    data = models.FileField(upload_to=content_file_name)
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
