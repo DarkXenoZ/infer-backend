@@ -88,7 +88,7 @@ class Image(models.Model):
     def __str__(self):
         return self.data.name
     class Meta:
-        unique_together = ('name')
+        unique_together = ('name',)
 
 class Image3D(models.Model):
     name = models.CharField(max_length=50)
