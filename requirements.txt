@@ -12,3 +12,4 @@ celery
 tritonclient[grpc]
 albumentations
 segmentation-models-pytorch
+pynrrd
