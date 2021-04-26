@@ -19,6 +19,7 @@ import matplotlib.cm as cm
 import PIL
 import io
 from zipfile import ZipFile
+import cv2
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
