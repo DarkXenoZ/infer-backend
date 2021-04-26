@@ -70,6 +70,7 @@ def infer_image(project,pipeline,image,user):
     mask = Mask()
     mask.result = predResult
     mask.mask = File(open(result,'rb'))
+    mask.save()
     image[1].status = 2
     image[1].save()
     if "2D" in project.task:
