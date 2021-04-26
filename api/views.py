@@ -642,14 +642,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     state = (line_check[6].split(':'))[1].strip()
                     ops = (line_check[9].split(':'))[1].strip()
                     if project.task == "2D Classification":
+                        os.makedirs("tmp2d", exist_ok=True)
                         if ("1" in ops )and("STOPPED" in state):
                             output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
                                 shell=True, 
                                 encoding='UTF-8'
                             )
                             q.delete()    
-                        files_path= glob.glob("tmp/*.csv")
+                        files_path= glob.glob("tmp2d/*.csv")
                         for file_path in files_path:
                             with open(file_path, 'r') as f: 
                                 csvReader = csv.reader(f) 
