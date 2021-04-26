@@ -17,7 +17,7 @@ class Project(models.Model):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
     task = models.CharField(max_length=20,choices=TASK_CHOICES)
-    predclasses = ArrayField(models.CharField(max_length=50))
+    predclasses = ArrayField(models.CharField(max_length=50),null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     users = models.ManyToManyField(
         User,
@@ -87,9 +87,12 @@ class Image(models.Model):
     
     def __str__(self):
         return self.data.name
+    class Meta:
+        unique_together = ('name')
 
 class Image3D(models.Model):
     name = models.CharField(max_length=50)
+    data = models.FileField(upload_to=f'image3D/{name}')
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -111,13 +114,6 @@ class Image3D(models.Model):
         on_delete=models.CASCADE,
     )
 
-class Data3D(models.Model):
-    image3d = models.ForeignKey(
-        Image3D,
-        related_name='data',
-        on_delete = models.CASCADE,
-    )
-    file3d = models.FileField(upload_to='image3D/')    
 
 class PredictResult(models.Model):
     gradcam = models.FileField(upload_to='imagegrad/',null=True,blank=True)
@@ -171,6 +167,12 @@ class Queue(models.Model):
     )
     image = models.ForeignKey(
         Image,
+        related_name='queue',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    image3d = models.ForeignKey(
+        Image3D,
         related_name='queue',
         null=True,
         on_delete=models.CASCADE,
