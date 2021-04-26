@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.cm as cm
 import PIL
 import io
+from zipfile import ZipFile
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -632,7 +633,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
-            images_in_process = Image.objects.filter(project=project,status=1)         
+            # images_in_process = Image.objects.filter(project=project,status=1)         
             queue = Queue.objects.filter(project=project)
             for q in queue:
                 if q.pipeline.model_type =="CLARA":
@@ -640,37 +641,68 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     line_check = check.split('\n')
                     state = (line_check[6].split(':'))[1].strip()
                     ops = (line_check[9].split(':'))[1].strip()
-                    if ("1" in ops )and("STOPPED" in state):
-                        output = subprocess.check_output(
-                            f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
-                            shell=True, 
-                            encoding='UTF-8'
-                        )
-                        q.delete()
-                    files_path= glob.glob("tmp/*.csv")
-                    for file_path in files_path:
-                        with open(file_path, 'r') as f: 
-                            csvReader = csv.reader(f) 
-                            for rows in csvReader: 
-                                pred = {}
-                                for result in rows[1:]:
-                                    diag, precision = result.split(":")
-                                    pred[diag]=precision
-                                max_diag = max(pred,key=lambda k: pred[k])
-                                pred=json.dumps(pred)
-                                name = rows[0].split("/")[-1]
-                                img = Image.objects.get(data__contains=name.split('/')[-1])
-                                img.predclass = max_diag
-                                img.status= 2
-                                img.save()
-                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                predResult.predicted_class = pred
-                                predResult.save()
-                        os.remove(file_path)
+                    if project.task == "2D Classification":
+                        if ("1" in ops )and("STOPPED" in state):
+                            output = subprocess.check_output(
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
+                                shell=True, 
+                                encoding='UTF-8'
+                            )
+                            q.delete()    
+                        files_path= glob.glob("tmp/*.csv")
+                        for file_path in files_path:
+                            with open(file_path, 'r') as f: 
+                                csvReader = csv.reader(f) 
+                                for rows in csvReader: 
+                                    pred = {}
+                                    for result in rows[1:]:
+                                        diag, precision = result.split(":")
+                                        pred[diag]=precision
+                                    max_diag = max(pred,key=lambda k: pred[k])
+                                    pred=json.dumps(pred)
+                                    name = rows[0].split("/")[-1]
+                                    img = Image.objects.get(data__contains=name.split('/')[-1])
+                                    img.predclass = max_diag
+                                    img.status= 2
+                                    img.save()
+                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                    predResult.predicted_class = pred
+                                    predResult.save()
+                            os.remove(file_path)
+                    ### not done        
+                    elif project.task == "3D Classification":
+                        if ("1" in ops )and("STOPPED" in state):
+                            output = subprocess.check_output(
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
+                                shell=True, 
+                                encoding='UTF-8'
+                            )
+                            q.delete()    
+                        files_path= glob.glob("tmp/*.csv")
+                        for file_path in files_path:
+                            with open(file_path, 'r') as f: 
+                                csvReader = csv.reader(f) 
+                                for rows in csvReader: 
+                                    pred = {}
+                                    for result in rows[1:]:
+                                        diag, precision = result.split(":")
+                                        pred[diag]=precision
+                                    max_diag = max(pred,key=lambda k: pred[k])
+                                    pred=json.dumps(pred)
+                                    name = rows[0].split("/")[-1]
+                                    img = Image.objects.get(data__contains=name.split('/')[-1])
+                                    img.predclass = max_diag
+                                    img.status= 2
+                                    img.save()
+                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                    predResult.predicted_class = pred
+                                    predResult.save()
+                            os.remove(file_path)
+                    elif project.task == "3D Segmentation":
+                        pass
         except:
-            print('no in process')
-            return Response(ImageProjectSerializer(project, many=False).data,
-                        status=status.HTTP_200_OK)
+            pass
+
         return Response(ImageProjectSerializer(project, many=False).data,
                     status=status.HTTP_200_OK)
 
@@ -796,6 +828,49 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK
             )
+    ###
+    @action (detail=True, methods=['POST'],)
+    def upload_image3D(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        try:
+            user = check_staff_permission(project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, [
+            'image',
+            'patient_name',
+            'patient_id',
+            'physician_name',
+            'patient_age',
+            'content_date'
+            ]
+        )
+        if response[0] != 0:
+            return response[1]
+        imgs=Image3D()
+        imgs.patient_name= request.data['patient_name']
+        imgs.patient_id =  request.data['patient_id']
+        imgs.physician_name =  request.data['physician_name']
+        imgs.patient_age =  request.data['patient_age']
+        imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
+        imgs.name = request.data['image'].name
+        imgs.status = 0
+        imgs.project = project.pk
+        imgs.save()
+        
+        with ZipFile(imgs.name, 'r') as zipObj:
+            zipObj.extractall()
+        
+        return Response(
+                {
+                    'message': 'Image uploaded',
+                    'result': ImageProjectSerializer(project, many=False).data,
+                },
+                status=status.HTTP_200_OK
+            )
    
     @action (detail=True, methods=['POST'],)
     def infer_image(self, request, pk=None):
@@ -818,19 +893,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
         images = []
         for img in image_ids:
             try:
-                image = Image.objects.get(id=img)
-                images.append((image.data.name,image))
+                if "2D" in project.task:
+                    image = Image.objects.get(id=img)
+                    images.append((image.data.name,image))
+                else:
+                    image = Image3D.objects.get(id=img)
+                    images.append((image.name,image))
                 image.status = 1
                 image.save()
             except:
                 return not_found(f'Image (id:{img})')
         if pipeline.model_type == "CLARA":
-            tmp_path = os.path.join("tmp","")
             file_path = os.path.join("media","")
-            os.makedirs("tmp", exist_ok=True)
             for img in images:
+                if "2D" in project.task:
+                    filename = os.path.join(file_path,img[0])
+                else:
+                    filename = file_path+img[0]+"/*.dcm"
                 output1 = subprocess.check_output(
-                    f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {file_path+img[0]} ", 
+                    f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {filename} ", 
                     shell=True, 
                     encoding='UTF-8'
                 )
@@ -842,12 +923,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     encoding='UTF-8'
                 )
                 try:
-                    img_nograd = img[0]
-                    img_io = io.BytesIO()
-                    img_grad = mock_heatmap(img_nograd)
-                    img_grad.save(img_io, format='PNG')
+                    if project.task == "2D Classification":
+                        img_nograd = img[0]
+                        img_io = io.BytesIO()
+                        img_grad = mock_heatmap(img_nograd)
+                        img_grad.save(img_io, format='PNG')
+                        result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
                     result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
-                    result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
                     result.save()
                 except:
                     return Response(
@@ -859,9 +941,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 q.save()
         else:
             for img in images:
-                q = Queue.objects.create(project=project,pipeline=pipeline,image=img[1])
+                if "2D" in project.task:
+                    q = Queue.objects.create(project=project,pipeline=pipeline,image=img[1])
+                    result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                else:
+                    q = Queue.objects.create(project=project,pipeline=pipeline,image3d=img[1])
+                    result = PredictResult.objects.create(pipeline=pipeline,image3d=img[1])
                 q.save()
-                result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
                 result.save()
                 infer_image(project,pipeline,img,user)
         create_log(
@@ -994,6 +1080,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     
     def create(self, request, pk=None):
         return err_not_allowed
+    
 
     @action (detail=True, methods=['PUT'],)
     def verify_image(self, request, pk=None):
@@ -1027,6 +1114,38 @@ class ImageViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
+    @action (detail=True, methods=['PUT'],)
+    def verify_mask(self, request, pk=None):
+        try:
+            image = Image.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            user = check_staff_permission(image.project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['actual_mask','note'])
+        if response[0] != 0:
+            return response[1]
+        for diag in request.data['actual_mask'] :
+            if diag not in image.project.predclasses:
+                return not_found('actual_mask')
+        image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
+        image.status = 3
+        image.note = request.data['note']
+        image.timestamp = datetime.now()
+        image.verify_by = f'{user.first_name} {user.last_name}'
+        image.save()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} verify {image.name}")
+        return Response(
+            {
+                'message': 'Image Verified',
+                'result': ImageSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
+
     def destroy(self, request, pk=None):
         try:
             image = Image.objects.get(id=pk)
@@ -1037,13 +1156,17 @@ class ImageViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         try:
-            os.remove(os.path.join("media",image.dat8.name))
+            os.remove(os.path.join("media",image.actual_mask.name))
+        except:
+            pass
+        try:
+            os.remove(os.path.join("media",image.data.name))
         except:
             Response(
             {
                 'message': 'Can not delete the image',
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_400_BAD_REQUEST
         )        
         image.delete()
         create_log(user=request.user,
@@ -1122,6 +1245,38 @@ class Image3DViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
+    @action (detail=True, methods=['PUT'],)
+    def verify_mask(self, request, pk=None):
+        try:
+            image = Image3D.objects.get(id=pk)
+        except:
+            return err_not_found
+        try:
+            user = check_staff_permission(image.project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['actual_mask','note'])
+        if response[0] != 0:
+            return response[1]
+        for diag in request.data['actual_mask'] :
+            if diag not in image.project.predclasses:
+                return not_found('actual_mask')
+        image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
+        image.status = 3
+        image.note = request.data['note']
+        image.timestamp = datetime.now()
+        image.verify_by = f'{user.first_name} {user.last_name}'
+        image.save()
+        create_log(user=request.user,
+                   desc=f"{request.user.username} verify {image.name}")
+        return Response(
+            {
+                'message': 'Image Verified',
+                'result': Image3DSerializer(image, many=False).data,
+            },
+            status=status.HTTP_200_OK
+        )
     ####
     def destroy(self, request, pk=None):
         try:
@@ -1133,14 +1288,13 @@ class Image3DViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         try:
-            for img in image.data:
-                os.remove(os.path.join("media",img.name))
+            shutil.rmtree(os.path.join("media","image3D",image.name))
         except:
             Response(
             {
                 'message': 'Can not delete the image',
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_400_BAD_REQUEST
         )        
         image.delete()
         create_log(user=request.user,
