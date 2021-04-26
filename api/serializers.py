@@ -13,7 +13,7 @@ class LogSerializer(serializers.ModelSerializer):
 class MaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mask
-        fields = ("mask")
+        fields = ("mask",)
 
 class PredictResultSerializer(serializers.ModelSerializer):
     predicted_class = serializers.JSONField()
