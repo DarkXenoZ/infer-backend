@@ -866,7 +866,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.save()
         
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
-            zipObj.extractall(os.path.join("media","image3D",imgs.name))
+            zipObj.extractall(os.path.join("media","image3D",imgs.name.split('.')[0]))
         
         return Response(
                 {
