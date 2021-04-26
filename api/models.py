@@ -171,7 +171,7 @@ class Queue(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    image3d = models.ForeignKey(
+    image3D = models.ForeignKey(
         Image3D,
         related_name='queue',
         null=True,
