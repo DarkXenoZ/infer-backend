@@ -923,13 +923,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     encoding='UTF-8'
                 )
                 try:
-                    if project.task == "2D Classification":
-                        img_nograd = img[0]
-                        img_io = io.BytesIO()
-                        img_grad = mock_heatmap(img_nograd)
-                        img_grad.save(img_io, format='PNG')
-                        result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
-                    result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                    # if project.task == "2D Classification":
+                    #     img_nograd = img[0]
+                    #     img_io = io.BytesIO()
+                    #     img_grad = mock_heatmap(img_nograd)
+                    #     img_grad.save(img_io, format='PNG')
+                    #     result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
+                    if "2D" in project.task:
+                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
+                        result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                    else:
+                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img[1])
+                        result = PredictResult.objects.create(pipeline=pipeline,image3D=img[1])
+                    q.save()
                     result.save()
                 except:
                     return Response(
@@ -937,8 +943,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             "message":"This image infered with The pipeline"
                         },status=status.HTTP_400_BAD_REQUEST
                     )
-                q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
-                q.save()
         else:
             for img in images:
                 if "2D" in project.task:
