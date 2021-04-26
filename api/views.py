@@ -758,7 +758,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
             
         img = ds.pixel_array
-        img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
+        img = np.expand_dims(x, axis=2)
+        z = np.zeros(img.shape[:-1] + (2,), dtype=img.dtype)
+        img = np.concatenate((img, z), axis=-1)
+
+
         png_name = request.data['dicom'].name.replace('.dcm','.png')
         imgs['name']=png_name
         cv2.imwrite(png_name, img)
