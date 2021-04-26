@@ -116,7 +116,8 @@ class Image3D(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-
+    class Meta:
+        unique_together = ('name',)
 
 class PredictResult(models.Model):
     gradcam = models.FileField(upload_to='imagegrad/',null=True,blank=True)
