@@ -860,11 +860,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
         imgs.name = request.data['image'].name
+        imgs.data = request.data['image']
         imgs.status = 0
         imgs.project = project
         imgs.save()
         
-        with ZipFile(imgs.name, 'r') as zipObj:
+        with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
             zipObj.extractall()
         
         return Response(
