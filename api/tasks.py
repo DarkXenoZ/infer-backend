@@ -72,7 +72,10 @@ def infer_image(project,pipeline,image,user):
     mask.mask = File(open(result,'rb'))
     image[1].status = 2
     image[1].save()
-    q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
+    if "2D" in project.task:
+        q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
+    else:
+        q = Queue.objects.get(project=project,pipeline=pipeline,image3d=image[1])
     q.delete()
     create_log(user=user,
                 desc=f"{user.username} infer image id  {image[1].id}")
