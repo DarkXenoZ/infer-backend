@@ -69,7 +69,7 @@ def infer_image(project,pipeline,image,user):
     result = postprocessModule.postprocess(Output,image,predResult)
     mask = Mask()
     mask.result = predResult
-    mask.mask.name = result
+    mask.mask = File(open(result,'rb'))
     image[1].status = 2
     image[1].save()
     q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
