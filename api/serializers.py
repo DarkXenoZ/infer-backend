@@ -38,13 +38,8 @@ class ImageSerializer(serializers.ModelSerializer):
             "verify_by","timestamp","result"
             )
 
-class Data3DSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = data3D
-        fields = ("file3d")
 
 class Image3DSerializer(serializers.ModelSerializer):
-    data = Data3DSerializer(many=True)
     class Meta:
         model = Image3D
         fields = (
