@@ -675,33 +675,45 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     elif project.task == "3D Classification":
                         if ("1" in ops )and("STOPPED" in state):
                             output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp/", 
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/", 
                                 shell=True, 
                                 encoding='UTF-8'
                             )
                             q.delete()    
-                        files_path= glob.glob("tmp/*.csv")
+                        files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.csv")
                         for file_path in files_path:
                             with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f) 
+                                csvReader = csv.reader(f)
+                                pred = {} 
                                 for rows in csvReader: 
-                                    pred = {}
-                                    for result in rows[1:]:
-                                        diag, precision = result.split(":")
-                                        pred[diag]=precision
-                                    max_diag = max(pred,key=lambda k: pred[k])
-                                    pred=json.dumps(pred)
-                                    name = rows[0].split("/")[-1]
-                                    img = Image.objects.get(data__contains=name.split('/')[-1])
-                                    img.predclass = max_diag
-                                    img.status= 2
-                                    img.save()
-                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                    predResult.predicted_class = pred
-                                    predResult.save()
+                                    pred[rows[2]] = rows[1]
+                                max_diag = max(pred,key=lambda k: pred[k])
+                                pred=json.dumps(pred)
+                                name = rows[0].split("/")[-1]
+                                img = q.image3D
+                                img.predclass = max_diag
+                                img.status= 2
+                                img.save()
+                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)
+                                predResult.predicted_class = pred
+                                predResult.save()
                             os.remove(file_path)
                     elif project.task == "3D Segmentation":
-                        pass
+                        if ("1" in ops )and("STOPPED" in state):
+                            output = subprocess.check_output(
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.raw  media/image3D/{q.image3D.name}/", 
+                                shell=True, 
+                                encoding='UTF-8'
+                            )
+                            q.delete()
+                            predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)    
+                            mask = Mask()
+                            mask.result = predResult
+                            files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.raw")[0]
+                            mask.mask = File(open(files_path,'rb'))
+                            mask.save()
+                            os.remove(files_path)
+                        
         except:
             pass
 
