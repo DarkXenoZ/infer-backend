@@ -7,7 +7,7 @@ def postprocess(results,image,predResult):
     results = results.round()
     results = (1- results)
     print(results.shape)
-    results = results.reshape((1,384,288,1))
+    results = results.reshape((1,288,384,1))
     results = results.swapaxes(1,2)
     filename = image[0].split('/')[-1]
     filename = filename.split('.')[0] +".seg.nrrd"
