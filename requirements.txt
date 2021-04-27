@@ -13,3 +13,4 @@ tritonclient[grpc]
 albumentations
 segmentation-models-pytorch
 pynrrd
+scikit-image
