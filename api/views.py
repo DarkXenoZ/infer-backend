@@ -938,7 +938,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
                                 img_grad.save(img_io, format='PNG')
                                 result.gradcam = InMemoryUploadedFile(img_io, None, img_grad, 'image/png', img_io.tell, charset=None)
-                            except:
+                            except Exception as e:
+                                print('view error:\n',str(e))
                                 create_log(
                                     user=user,
                                     desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.model_name} pipeline"

@@ -52,7 +52,8 @@ def make_gradcam(
         superimposed_img = jet_heatmap * 0.4 + img
         superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
         return superimposed_img
-    except:
+    except Exception as e:
+        print('gradcam error:\n',str(e))
         return None
 
 
