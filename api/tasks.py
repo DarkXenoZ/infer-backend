@@ -36,21 +36,24 @@ def make_gradcam(
     pipeline,
     img_path
 ):  
-    preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
-    preprocessModule = importlib.import_module(preprocess_module_name)
-    preprocessImage = preprocessModule.preprocess(img_path)
-    gradcam_model = GradcamModel(os.path.join('/backend/api','python_models',pipeline.model_name,'model.trt.pb'))
-    heatmap = gradcam_model.gradcam(preprocessImage)
-    heatmap = np.uint8(255 * heatmap)
-    jet = cm.get_cmap("jet")
-    jet_colors = jet(np.arange(256))[:, :3]
-    jet_heatmap = jet_colors[heatmap]
-    jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
-    jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
-    jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
-    superimposed_img = jet_heatmap * 0.4 + img
-    superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
-    return superimposed_img
+    try:
+        preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
+        preprocessModule = importlib.import_module(preprocess_module_name)
+        preprocessImage = preprocessModule.preprocess(img_path)
+        gradcam_model = GradcamModel(os.path.join('/backend/api','python_models',pipeline.model_name,'model.trt.pb'))
+        heatmap = gradcam_model.gradcam(preprocessImage)
+        heatmap = np.uint8(255 * heatmap)
+        jet = cm.get_cmap("jet")
+        jet_colors = jet(np.arange(256))[:, :3]
+        jet_heatmap = jet_colors[heatmap]
+        jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
+        jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
+        jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
+        superimposed_img = jet_heatmap * 0.4 + img
+        superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
+        return superimposed_img
+    except:
+        return None
 
 
 @shared_task
