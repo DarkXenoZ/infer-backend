@@ -11,7 +11,7 @@ class GradcamModel():
         
         tf.compat.v1.reset_default_graph()
         sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(
-        allow_soft_placement=True, log_device_placement=True)
+        allow_soft_placement=True)
         )
 
         with gfile.FastGFile(pbpath, 'rb') as f:
