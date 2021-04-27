@@ -937,7 +937,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 img_io = io.BytesIO()
                                 img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
                                 img_grad.save(img_io, format='PNG')
-                                result.gradcam = InMemoryUploadedFile(img_io, None, img_grad, 'image/png', img_io.tell, charset=None)
+                                result.gradcam = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
                             except Exception as e:
                                 print('view error:\n',str(e))
                                 create_log(
