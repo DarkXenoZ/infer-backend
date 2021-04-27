@@ -37,7 +37,7 @@ def make_gradcam(
     img_path
 ):  
     try:
-        preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
+        preprocess_module_name = f'api.python_models.{pipeline.clara_pipeline_name}.preprocess'
         preprocessModule = importlib.import_module(preprocess_module_name)
         preprocessImage = preprocessModule.preprocess(img_path)
         gradcam_model = GradcamModel(os.path.join('/backend/api','python_models',pipeline.model_name,'model.trt.pb'))
