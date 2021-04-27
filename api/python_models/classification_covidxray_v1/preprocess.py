@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from skimage.transform import resize
 
 def preprocess(Input):
     img = cv2.imread(os.path.join('/backend/media',Input))
