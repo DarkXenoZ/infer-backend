@@ -6,6 +6,7 @@ import sys
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
