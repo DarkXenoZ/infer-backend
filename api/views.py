@@ -731,16 +731,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         img.status = 2
                         img.save()
                         results_path = os.path.join("media","image3D",q.image3D.name,"results")
-
-                        with ZipFile(os.path.join("results.zip"), 'w') as zipObj:
+                        maskname = img.name+".zip"
+                        with ZipFile(os.path.join(maskname), 'w') as zipObj:
                             for folderName, subfolders, filenames in os.walk(results_path):
                                 for filename in filenames:
                                     filePath = os.path.join(folderName, filename)
                                     zipObj.write(filePath, os.path.basename(filePath))
 
-                        mask.mask = File(open(os.path.join("results.zip"),'rb'))
+                        mask.mask = File(open(os.path.join(maskname),'rb'))
                         mask.save()
-                        os.remove("results.zip")
+                        os.remove(maskname)
                         shutil.rmtree(results_path)
                     
         # except:
