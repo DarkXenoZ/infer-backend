@@ -729,7 +729,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             for folderName, subfolders, filenames in os.walk(results_path):
                                 for filename in filenames:
                                     filePath = os.path.join(folderName, filename)
-                                    zipObj.write(filePath, basename(filePath))
+                                    zipObj.write(filePath, os.path.basename(filePath))
 
                         mask.mask = File(open(os.path.join(results_path,"results.zip"),'rb'))
                         mask.save()
@@ -894,7 +894,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.physician_name =  request.data['physician_name']
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
-        imgs.name = request.data['image'].name.split('.')[0]
+        imgs.name = os.path.basename(request.data['image'].name)
         imgs.data = request.data['image']
         imgs.status = 0
         imgs.project = project
