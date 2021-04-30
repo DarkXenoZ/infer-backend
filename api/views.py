@@ -291,9 +291,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        images = Image.objects.filter(project=project)
-        diag_list ={}
+        if "2D" in project.task:
+            images = Image.objects.filter(project=project)
+            imgSerializer = ImageSerializer
+        else:
+            images = Image3D.objects.filter(project=project)
+            imgSerializer = Image3DSerializer
         status_count=[0,0,0,0]
+        diag_list ={}
         for each in images:
             status_count[each.status]+=1
             if each.actual_class == None :
@@ -313,16 +318,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 'in process': status_count[1],
                 'ai-annotated' : status_count[2],
                 'verified' : status_count[3]}
-        return Response(
-            {
-                'project': UserProjectSerializer(project, many=False).data,
-                'predicted': diag_list,
-                'pipelines': PipelineSerializer(pipelines,many=True).data,
-                'status' : fstatus,
-                'result' : ImageSerializer(images,many=True).data,
-            },
-            status=status.HTTP_200_OK
-        )
+            return Response(
+                {
+                    'project': UserProjectSerializer(project, many=False).data,
+                    'predicted': diag_list,
+                    'pipelines': PipelineSerializer(pipelines,many=True).data,
+                    'status' : fstatus,
+                    'result' : imgSerializer(images,many=True).data,
+                },
+                status=status.HTTP_200_OK
+            )
+
     
     def list(self, request):
         queryset = Project.objects.all()
@@ -348,7 +354,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         proj['cover'] = request.data['cover']
         proj['task'] = request.data['task']
         proj['predclasses'] = request.data['predclasses'].split(',')
-        print(proj['predclasses'])
         try:
             Project.objects.get(name=proj['name'])
             return Response(
