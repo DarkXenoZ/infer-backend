@@ -31,16 +31,19 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/user/<username>/project/
 	PUT	/api/user/<username>/change_password	(password)
 	GET	/api/project/	
-	POST	/api/project/	(name,description,task,cover,predclasses) predclasses ex : covid,normal
+	POST	/api/project/	(name,description,task,cover,predclasses(optional)) predclasses ex : covid,normal
 	GET	/api/project/<project_id>/
 	PUT	/api/project/<project_id>/		(name | task | cover | description | predclasses)
 	DELETE	/api/project/<project_id>/
 	POST	/api/project/<project_id>/add_user/		(username)
 	POST	/api/project/<project_id>/add_user_batch/		(users) users ex : user1,user2,user3	
 	GET	/api/project/<project_id>/list_pipeline/	(id)
-	POST	/api/project/<project_id>/add_pipeline/	(name,pipeline_id,description,operator,clara_pipeline_name)
+	POST	/api/project/<project_id>/add_pipeline/	(name,description,model_type
+	(CLARA:(pipeline_id,operator,clara_pipeline_name),NON CLARA:(model_name,netInputname,netOutputname))
+
 	POST	/api/project/<project_id>/upload_dicom/		(dicom)
 	POST	/api/project/<project_id>/upload_image/		(image,patient_name,patient_id,physician_name,patient_age,content_date:YMD)
+	POST	/api/project/<project_id>/upload_image3D/		(image:zip,patient_name,patient_id,physician_name,patient_age,content_date:YMD)
 	POST	/api/project/<project_id>/infer_image/	(image_ids:list,pipeline:id	)
 	GET	/api/project/<project_id>/list_uninfer_image/	(pipeline:id)
 	GET	/api/project/<project_id>/list_image/
@@ -51,6 +54,11 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET	/api/image/
 	GET	/api/image/<image_id>
 	PUT	/api/image/<image_id>/verify_image/	(actual_class,note)
+	PUT	/api/image/<image_id>/verify_mask/	(actual_mask:file,note)
+	GET	/api/image3D/
+	GET	/api/image3D/<image_id>
+	PUT	/api/image3D/<image_id>/verify_image/	(actual_class,note)
+	PUT	/api/image3D/<image_id>/verify_mask/	(actual_mask:file,note)
 	DELETE	/api/image/<image_id>/
 	GET	/api/predictResult/
 	GET	/api/predictResult/<predictResult_id>
