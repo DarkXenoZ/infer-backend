@@ -930,6 +930,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Pipeline')
         image_ids = request.data["image_ids"].split(',')
+        image_ids = list(filter(None,image_ids))
         images = []
         for img in image_ids:
             try:
