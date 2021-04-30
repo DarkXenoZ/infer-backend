@@ -318,16 +318,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 'in process': status_count[1],
                 'ai-annotated' : status_count[2],
                 'verified' : status_count[3]}
-            return Response(
-                {
-                    'project': UserProjectSerializer(project, many=False).data,
-                    'predicted': diag_list,
-                    'pipelines': PipelineSerializer(pipelines,many=True).data,
-                    'status' : fstatus,
-                    'result' : imgSerializer(images,many=True).data,
-                },
-                status=status.HTTP_200_OK
-            )
+        return Response(
+            {
+                'project': UserProjectSerializer(project, many=False).data,
+                'predicted': diag_list,
+                'pipelines': PipelineSerializer(pipelines,many=True).data,
+                'status' : fstatus,
+                'result' : imgSerializer(images,many=True).data,
+            },
+            status=status.HTTP_200_OK
+        )
 
     
     def list(self, request):
