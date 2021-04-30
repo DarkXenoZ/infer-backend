@@ -732,14 +732,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         img.save()
                         results_path = os.path.join("media","image3D",q.image3D.name,"results")
 
-                        with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
+                        with ZipFile(os.path.join("results.zip"), 'w') as zipObj:
                             for folderName, subfolders, filenames in os.walk(results_path):
                                 for filename in filenames:
                                     filePath = os.path.join(folderName, filename)
                                     zipObj.write(filePath, os.path.basename(filePath))
 
-                        mask.mask = File(open(os.path.join(results_path,"results.zip"),'rb'))
+                        mask.mask = File(open(os.path.join("results.zip"),'rb'))
                         mask.save()
+                        os.remove("results.zip")
                         shutil.rmtree(results_path)
                     
         # except:
@@ -901,7 +902,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.physician_name =  request.data['physician_name']
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
-        imgs.name = os.path.basename(request.data['image'].name)
+        imgs.name = request.data['image'].name.split('.')[0]
         imgs.data = request.data['image']
         imgs.status = 0
         imgs.project = project
