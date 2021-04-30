@@ -724,7 +724,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             mask.result = predResult
 
                             results_path = os.path.join("media","image3D",q.image3D.name,"results")
-                            files_path= glob.glob(os.path.join(results_path,"results.zip","*"))
 
                             with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
                                 for folderName, subfolders, filenames in os.walk(results_path):
