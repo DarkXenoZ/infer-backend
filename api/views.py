@@ -722,7 +722,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=q.image3D)    
                         mask = Mask()
                         mask.result = predResult
-
+                        img = q.image3D
+                        img.status = 2
+                        img.save()
                         results_path = os.path.join("media","image3D",q.image3D.name,"results")
 
                         with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
