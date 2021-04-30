@@ -899,8 +899,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.project = project
         imgs.save()
         
+        dcm_path = os.path.join("media","image3D",imgs.name,"dcm")
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
-            zipObj.extractall(os.path.join("media","image3D",imgs.name))
+            zipObj.extractall(dcm_path)
         
         return Response(
                 {
@@ -947,7 +948,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 if "2D" in project.task:
                     filename = os.path.join(file_path,img[0])
                 else:
-                    filename = file_path+"image3D/"+img[0]+"/*.dcm"
+                    filename = file_path+"image3D/"+img[0]+"/dcm/"
                 output1 = subprocess.check_output(
                     f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {filename} ", 
                     shell=True, 
