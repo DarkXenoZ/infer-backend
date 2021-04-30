@@ -645,98 +645,98 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 {'message': "Empty project"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        try:
+        # try:
             # images_in_process = Image.objects.filter(project=project,status=1)         
-            queue = Queue.objects.filter(project=project)
-            for q in queue:
-                if q.pipeline.model_type =="CLARA":
-                    check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
-                    line_check = check.split('\n')
-                    state = (line_check[6].split(':'))[1].strip()
-                    hstatus = (line_check[5].split(':'))[1].strip()
-                    if project.task == "2D Classification":
-                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
-                            os.makedirs("tmp2d", exist_ok=True)
-                            output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
-                                shell=True, 
-                                encoding='UTF-8'
-                            )
-                            q.delete()    
-                        files_path= glob.glob("tmp2d/*.csv")
-                        for file_path in files_path:
-                            with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f) 
-                                for rows in csvReader: 
-                                    pred = {}
-                                    for result in rows[1:]:
-                                        diag, precision = result.split(":")
-                                        pred[diag]=precision
-                                    max_diag = max(pred,key=lambda k: pred[k])
-                                    pred=json.dumps(pred)
-                                    name = rows[0].split("/")[-1]
-                                    img = Image.objects.get(data__contains=name.split('/')[-1])
-                                    img.predclass = max_diag
-                                    img.status= 2
-                                    img.save()
-                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                    predResult.predicted_class = pred
-                                    predResult.save()
-                            os.remove(file_path)
-                    ### not done        
-                    elif project.task == "3D Classification":
-                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
-                            output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/", 
-                                shell=True, 
-                                encoding='UTF-8'
-                            )
-                            q.delete()    
-                        files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.csv")
-                        for file_path in files_path:
-                            with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f)
-                                pred = {} 
-                                for rows in csvReader: 
-                                    pred[rows[2]] = rows[1]
+        queue = Queue.objects.filter(project=project)
+        for q in queue:
+            if q.pipeline.model_type =="CLARA":
+                check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
+                line_check = check.split('\n')
+                state = (line_check[6].split(':'))[1].strip()
+                hstatus = (line_check[5].split(':'))[1].strip()
+                if project.task == "2D Classification":
+                    if ("_HEALTHY" in hstatus )and("STOPPED" in state):
+                        os.makedirs("tmp2d", exist_ok=True)
+                        output = subprocess.check_output(
+                            f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
+                            shell=True, 
+                            encoding='UTF-8'
+                        )
+                        q.delete()    
+                    files_path= glob.glob("tmp2d/*.csv")
+                    for file_path in files_path:
+                        with open(file_path, 'r') as f: 
+                            csvReader = csv.reader(f) 
+                            for rows in csvReader: 
+                                pred = {}
+                                for result in rows[1:]:
+                                    diag, precision = result.split(":")
+                                    pred[diag]=precision
                                 max_diag = max(pred,key=lambda k: pred[k])
                                 pred=json.dumps(pred)
                                 name = rows[0].split("/")[-1]
-                                img = q.image3D
+                                img = Image.objects.get(data__contains=name.split('/')[-1])
                                 img.predclass = max_diag
                                 img.status= 2
                                 img.save()
-                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)
+                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
                                 predResult.predicted_class = pred
                                 predResult.save()
-                            os.remove(file_path)
-                    elif project.task == "3D Segmentation":
-                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
-                            os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
-                            output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/results/", 
-                                shell=True, 
-                                encoding='UTF-8'
-                            )
-                            q.delete()
-                            predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)    
-                            mask = Mask()
-                            mask.result = predResult
+                        os.remove(file_path)
+                ### not done        
+                elif project.task == "3D Classification":
+                    if ("_HEALTHY" in hstatus )and("STOPPED" in state):
+                        output = subprocess.check_output(
+                            f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/", 
+                            shell=True, 
+                            encoding='UTF-8'
+                        )
+                        q.delete()    
+                    files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.csv")
+                    for file_path in files_path:
+                        with open(file_path, 'r') as f: 
+                            csvReader = csv.reader(f)
+                            pred = {} 
+                            for rows in csvReader: 
+                                pred[rows[2]] = rows[1]
+                            max_diag = max(pred,key=lambda k: pred[k])
+                            pred=json.dumps(pred)
+                            name = rows[0].split("/")[-1]
+                            img = q.image3D
+                            img.predclass = max_diag
+                            img.status= 2
+                            img.save()
+                            predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)
+                            predResult.predicted_class = pred
+                            predResult.save()
+                        os.remove(file_path)
+                elif project.task == "3D Segmentation":
+                    if ("_HEALTHY" in hstatus )and("STOPPED" in state):
+                        os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
+                        output = subprocess.check_output(
+                            f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/results/", 
+                            shell=True, 
+                            encoding='UTF-8'
+                        )
+                        q.delete()
+                        predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)    
+                        mask = Mask()
+                        mask.result = predResult
 
-                            results_path = os.path.join("media","image3D",q.image3D.name,"results")
+                        results_path = os.path.join("media","image3D",q.image3D.name,"results")
 
-                            with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
-                                for folderName, subfolders, filenames in os.walk(results_path):
-                                    for filename in filenames:
-                                        filePath = os.path.join(folderName, filename)
-                                        zipObj.write(filePath, basename(filePath))
+                        with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
+                            for folderName, subfolders, filenames in os.walk(results_path):
+                                for filename in filenames:
+                                    filePath = os.path.join(folderName, filename)
+                                    zipObj.write(filePath, basename(filePath))
 
-                            mask.mask = File(open(os.path.join(results_path,"results.zip"),'rb'))
-                            mask.save()
-                            shutil.rmtree(results_path)
-                        
-        except:
-            pass
+                        mask.mask = File(open(os.path.join(results_path,"results.zip"),'rb'))
+                        mask.save()
+                        shutil.rmtree(results_path)
+                    
+        # except:
+        #     pass
         if "2D" in project.task:
             return Response(ImageProjectSerializer(project, many=False).data,
             status=status.HTTP_200_OK)
