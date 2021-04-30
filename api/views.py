@@ -653,9 +653,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     check = subprocess.check_output(f"/root/claracli/clara describe job -j {q.job} ", shell=True, encoding='UTF-8')
                     line_check = check.split('\n')
                     state = (line_check[6].split(':'))[1].strip()
-                    ops = (line_check[9].split(':'))[1].strip()
+                    hstatus = (line_check[5].split(':'))[1].strip()
                     if project.task == "2D Classification":
-                        if ("1" in ops )and("STOPPED" in state):
+                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             os.makedirs("tmp2d", exist_ok=True)
                             output = subprocess.check_output(
                                 f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
@@ -685,7 +685,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             os.remove(file_path)
                     ### not done        
                     elif project.task == "3D Classification":
-                        if ("1" in ops )and("STOPPED" in state):
+                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
                                 f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/", 
                                 shell=True, 
@@ -711,7 +711,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 predResult.save()
                             os.remove(file_path)
                     elif project.task == "3D Segmentation":
-                        if ("1" in ops )and("STOPPED" in state):
+                        if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
                             output = subprocess.check_output(
                                 f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/results/", 
