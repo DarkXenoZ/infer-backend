@@ -600,7 +600,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             pass
         pipeline = Pipeline()
         pipeline.project = project
-        pipline.name = request.data['name']
+        pipeline.name = request.data['name']
         pipeline.model_type = model_type
         pipeline.desc = request.data['description']
         if model_type == "CLARA":
