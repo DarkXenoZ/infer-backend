@@ -111,7 +111,11 @@ class ImageProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ("id","name","images")
-
+class Image3DProjectSerializer(serializers.ModelSerializer):
+    images3d = Image3DSerializer(many=True)
+    class Meta:
+        model = Project
+        fields = ("id","name","images3d")
 
 class ProjectImageSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(
