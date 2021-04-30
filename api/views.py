@@ -675,7 +675,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 max_diag = max(pred,key=lambda k: pred[k])
                                 pred=json.dumps(pred)
                                 name = rows[0].split("/")[-1]
-                                img = Image.objects.get(data__contains=name.split('/')[-1])
+                                img = q.image
                                 img.predclass = max_diag
                                 img.status= 2
                                 img.save()
@@ -719,7 +719,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             encoding='UTF-8'
                         )
                         q.delete()
-                        predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)    
+                        predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=q.image3D)    
                         mask = Mask()
                         mask.result = predResult
 
