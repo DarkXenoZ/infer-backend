@@ -947,7 +947,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 if "2D" in project.task:
                     filename = os.path.join(file_path,img[0])
                 else:
-                    filename = file_path+img[0]+"/*.dcm"
+                    filename = file_path+"image3D/"+img[0]+"/*.dcm"
                 output1 = subprocess.check_output(
                     f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {filename} ", 
                     shell=True, 
