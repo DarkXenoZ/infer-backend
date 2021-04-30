@@ -38,8 +38,8 @@ class ImageSerializer(serializers.ModelSerializer):
             "verify_by","timestamp","result"
             )
 
-
 class Image3DSerializer(serializers.ModelSerializer):
+    result = PredictResultSerializer(many=True)
     class Meta:
         model = Image3D
         fields = (
@@ -47,7 +47,8 @@ class Image3DSerializer(serializers.ModelSerializer):
             "patient_name","patient_id",
             "patient_age","content_date",
             "physician_name","status",
-            "actual_class","actual_mask","predclass","verify_by","timestamp"
+            "actual_class","actual_mask","predclass",
+            "verify_by","timestamp","result"
             )
 
 
