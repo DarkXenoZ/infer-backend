@@ -1170,10 +1170,12 @@ class ImageViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_class','note'])
         if response[0] != 0:
             return response[1]
-        for diag in request.data['actual_class'] :
+        actual_class = request.data['actual_class'].split(',')
+        actual_class = list(filter(None,actual_class))
+        for diag in actual_class :
             if diag not in image.project.predclasses:
                 return not_found('predClass')
-        image.actual_class = request.data['actual_class']
+        image.actual_class = actual_class
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
@@ -1202,9 +1204,6 @@ class ImageViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_mask','note'])
         if response[0] != 0:
             return response[1]
-        for diag in request.data['actual_mask'] :
-            if diag not in image.project.predclasses:
-                return not_found('actual_mask')
         image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
         image.status = 3
         image.note = request.data['note']
@@ -1313,10 +1312,12 @@ class Image3DViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_class','note'])
         if response[0] != 0:
             return response[1]
-        for diag in request.data['actual_class'] :
+        actual_class = request.data['actual_class'].split(',')
+        actual_class = list(filter(None,actual_class))
+        for diag in actual_class :
             if diag not in image.project.predclasses:
                 return not_found('predClass')
-        image.actual_class = request.data['actual_class']
+        image.actual_class = actual_class
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
@@ -1345,9 +1346,6 @@ class Image3DViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_mask','note'])
         if response[0] != 0:
             return response[1]
-        for diag in request.data['actual_mask'] :
-            if diag not in image.project.predclasses:
-                return not_found('actual_mask')
         image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
         image.status = 3
         image.note = request.data['note']
