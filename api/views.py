@@ -738,9 +738,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         
         except:
             pass
-
-        return Response(ImageProjectSerializer(project, many=False).data,
-                    status=status.HTTP_200_OK)
+        if "2D" in project.task:
+            return Response(ImageProjectSerializer(project, many=False).data,
+            status=status.HTTP_200_OK)
+        else: return Response(Image3DProjectSerializer(project, many=False).data,
+            status=status.HTTP_200_OK)
 
     @action (detail=True, methods=['GET'],)
     def list_uninfer_image(self, request, pk=None):
