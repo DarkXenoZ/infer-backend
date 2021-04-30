@@ -409,9 +409,37 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return err_no_permission
         try:
             project = Project.objects.get(id=pk)
-            project.delete()
         except:
-            return err_not_found
+            return not_found('Project')
+        if "2D" in project.task:
+            images = Image.objects.filter(project=project)
+            for image in images:
+                try:
+                    predResults = PredictResult.objects.filter(image=image)
+                    for result in predResults:
+                        if "Classification" in project.task :
+                            os.remove(os.path.join("media",result.gradcam.name))
+                        else:
+                            masks = Mask.objects.filter(result=result)
+                            for mask in masks:
+                                os.remove(os.path.join("media",mask.mask.name))
+                except: 
+                    pass
+        else:
+            images = Image3D.objects.filter(project=project)
+            for image in images:
+                try:
+                    predResults = PredictResult.objects.filter(image3D=image)
+                    for result in predResults:
+                        if "Classification" in project.task :
+                            os.remove(os.path.join("media",result.gradcam.name))
+                        else:
+                            masks = Mask.objects.filter(result=result)
+                            for mask in masks:
+                                os.remove(os.path.join("media",mask.mask.name))
+                except: 
+                    pass
+        project.delete()
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'], )    
@@ -627,8 +655,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     state = (line_check[6].split(':'))[1].strip()
                     ops = (line_check[9].split(':'))[1].strip()
                     if project.task == "2D Classification":
-                        os.makedirs("tmp2d", exist_ok=True)
                         if ("1" in ops )and("STOPPED" in state):
+                            os.makedirs("tmp2d", exist_ok=True)
                             output = subprocess.check_output(
                                 f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
                                 shell=True, 
@@ -684,8 +712,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             os.remove(file_path)
                     elif project.task == "3D Segmentation":
                         if ("1" in ops )and("STOPPED" in state):
+                            os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
                             output = subprocess.check_output(
-                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.raw  media/image3D/{q.image3D.name}/", 
+                                f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*  media/image3D/{q.image3D.name}/results/", 
                                 shell=True, 
                                 encoding='UTF-8'
                             )
@@ -693,10 +722,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)    
                             mask = Mask()
                             mask.result = predResult
-                            files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.raw")[0]
-                            mask.mask = File(open(files_path,'rb'))
+
+                            results_path = os.path.join("media","image3D",q.image3D.name,"results")
+                            files_path= glob.glob(os.path.join(results_path,"results.zip","*"))
+
+                            with ZipFile(os.path.join(results_path,"results.zip"), 'w') as zipObj:
+                                for folderName, subfolders, filenames in os.walk(results_path):
+                                    for filename in filenames:
+                                        filePath = os.path.join(folderName, filename)
+                                        zipObj.write(filePath, basename(filePath))
+
+                            mask.mask = File(open(os.path.join(results_path,"results.zip"),'rb'))
                             mask.save()
-                            os.remove(files_path)
+                            shutil.rmtree(results_path)
                         
         except:
             pass
@@ -855,14 +893,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.physician_name =  request.data['physician_name']
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
-        imgs.name = request.data['image'].name
+        imgs.name = request.data['image'].name.split('.')[0]
         imgs.data = request.data['image']
         imgs.status = 0
         imgs.project = project
         imgs.save()
         
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
-            zipObj.extractall(os.path.join("media","image3D",imgs.name.split('.')[0]))
+            zipObj.extractall(os.path.join("media","image3D",imgs.name))
         
         return Response(
                 {
@@ -937,9 +975,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 img_io = io.BytesIO()
                                 img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
                                 img_grad.save(img_io, format='PNG')
-                                result.gradcam = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
-                            except Exception as e:
-                                print('view error:\n',str(e))
+                                result.gradcam = InMemoryUploadedFile(img_io, None, img_grad, 'image/png', img_io.tell, charset=None)
+                            except:
                                 create_log(
                                     user=user,
                                     desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.model_name} pipeline"
@@ -1055,9 +1092,20 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return err_no_permission
         try:
             pipeline = Pipeline.objects.get(id=pk)
-            pipeline.delete()
         except:
             return not_found('Pipeline')
+        try:
+            predResults = PredictResult.objects.filter(pipeline=pipeline)
+            for result in predResults:
+                if "Classification" in pipeline.project.task :
+                    os.remove(os.path.join("media",result.gradcam.name))
+                else:
+                    masks = Mask.objects.filter(result=result)
+                    for mask in masks:
+                        os.remove(os.path.join("media",mask.mask.name))
+        except: 
+            pass
+        pipeline.delete()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -1171,6 +1219,17 @@ class ImageViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(image.project, request)
         except:
             return err_no_permission
+        try:
+            predResults = PredictResult.objects.filter(image=image)
+            for result in predResults:
+                if "Classification" in image.project.task :
+                    os.remove(os.path.join("media",result.gradcam.name))
+                else:
+                    masks = Mask.objects.filter(result=result)
+                    for mask in masks:
+                        os.remove(os.path.join("media",mask.mask.name))
+        except: 
+            pass
         try:
             os.remove(os.path.join("media",image.actual_mask.name))
         except:
@@ -1293,7 +1352,7 @@ class Image3DViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-    ####
+
     def destroy(self, request, pk=None):
         try:
             image = Image3D.objects.get(id=pk)
@@ -1303,6 +1362,17 @@ class Image3DViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(image.project, request)
         except:
             return err_no_permission
+        try:
+            predResults = PredictResult.objects.filter(image3D=image)
+            for result in predResults:
+                if "Classification" in image.project.task :
+                    os.remove(os.path.join("media",result.gradcam.name))
+                else:
+                    masks = Mask.objects.filter(result=result)
+                    for mask in masks:
+                        os.remove(os.path.join("media",mask.mask.name))
+        except: 
+            pass
         try:
             shutil.rmtree(os.path.join("media","image3D",image.name))
         except:
