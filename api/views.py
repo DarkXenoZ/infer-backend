@@ -602,7 +602,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         pipeline.project = project
         pipeline.name = request.data['name']
         pipeline.model_type = model_type
-        pipeline.desc = request.data['description']
+        pipeline.description = request.data['description']
         if model_type == "CLARA":
             pipeline.operator = request.data['operator']
             pipeline.pipeline_id = request.data['pipeline_id']
