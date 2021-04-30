@@ -1204,7 +1204,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_mask','note'])
         if response[0] != 0:
             return response[1]
-        image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
+        image.actual_mask = request.data['actual_mask']
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
@@ -1346,7 +1346,7 @@ class Image3DViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_mask','note'])
         if response[0] != 0:
             return response[1]
-        image.actual_mask = File(open(request.data['actual_mask'].name,'rb'))
+        image.actual_mask = request.data['actual_mask']
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
