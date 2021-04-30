@@ -574,54 +574,45 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
-        response = check_arguments(
-            request.data, 
-            ["name","pipeline_id","operator","description","clara_pipeline_name","model_name","model_type"]
-            )
+        try:
+            model_type = request.data['model_type']
+        except:
+            return not_found('model_type')
+        if model_type == 'CLARA':
+            response = check_arguments(
+                request.data, 
+                ["name","description","pipeline_id","operator","clara_pipeline_name"]
+                )
+        else:
+            response = check_arguments(
+                request.data, 
+                ["name","description","model_name","netInputname","netOutputname"]
+                )
         if response[0] != 0:
             return response[1]
-        
-        name = request.data['name']
-        pipeline_id = request.data['pipeline_id']
-        desc = request.data['description']
-        operator = request.data['operator']
-        clara_pipeline_name = request.data['clara_pipeline_name']
-        model_name = request.data['model_name']
-        model_type = request.data['model_type']
         try:
-            Pipeline.objects.get(name=name)
+            Pipeline.objects.get(name= request.data['name'])
             return Response(
                 {'message': 'This name already exists'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
             pass
-        try:
-            Pipeline.objects.get(pipeline_id=pipeline_id)
-            return Response(
-                {'message': 'This pipeline_id already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except:
-            pipeline = Pipeline.objects.create(
-                name=name,pipeline_id=pipeline_id,
-                description=desc,
-                project=project,
-                operator=operator,
-                clara_pipeline_name=clara_pipeline_name,
-                model_type=model_type,
-                model_name=model_name
-                )
-        try:
-            pipeline.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            pipeline.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
+        pipeline = Pipeline()
+        pipeline.project = project
+        pipline.name = request.data['name']
+        pipeline.model_type = model_type
+        pipeline.desc = request.data['description']
+        if model_type == "CLARA":
+            pipeline.operator = request.data['operator']
+            pipeline.pipeline_id = request.data['pipeline_id']
+            pipeline.clara_pipeline_name = request.data['clara_pipeline_name']
+        else:
+            pipeline.model_name = request.data['model_name']
+            pipeline.netInputname = request.data['netInputname']
+            pipeline.netOutputname = request.data['netOutputname']
+
+        pipeline.save()
         create_log(user=request.user,
                    desc=f"{request.user.username} create {pipeline.name} (pipeline) ")
         return Response(
@@ -632,7 +623,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    ####
     @action (detail=True, methods=['GET'],)
     def list_image(self, request, pk=None):
         try:
