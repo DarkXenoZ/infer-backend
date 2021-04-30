@@ -755,9 +755,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             pipeline = Pipeline.objects.get(id=request.GET.get("pipeline"))
         except:
             return not_found('Pipeline')
-    
-        list_img = Image.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
-
+        if "2D" in project.task:
+            list_img = Image.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
+            Serializer = ImageSerializer
+        else:
+            list_img = Image3D.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
+            Serializer = Image3DSerializer
         return Response(
                 {
                     'result': ImageSerializer(list_img, many=True).data,
