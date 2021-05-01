@@ -974,9 +974,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         if "Classification" in project.task:
                             try:
                                 img_io = io.BytesIO()
-                                img_grad = make_gradcam(pipeline=pipeline, img_path=filename)
+                                img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
                                 img_grad.save(img_io, format='PNG')
-                                result.gradcam = InMemoryUploadedFile(img_io, None, img_grad, 'image/png', img_io.tell, charset=None)
+                                result.gradcam = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
                             except:
                                 create_log(
                                     user=user,
