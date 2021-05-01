@@ -1,26 +1,14 @@
 import imageio
 from django.core.files import File
 import os
-import nrrd
 
 def postprocess(results,image,predResult):
-    results = results.round()
-    results = (1- results)
-    print(results.shape)
-    results = results.reshape((1,288,384,1))
-    results = results.swapaxes(1,2)
-    filename = image[0].split('/')[-1]
-    filename = filename.split('.')[0] +".seg.nrrd"
-    my_header = {
-        'dimension': 4,
-        'kinds': ['list', 'domain', 'domain', 'domain'],
-        
-        'Segment0_ID': 'Segment_1',
-        'Segment0_Name': 'Colon',
-        'Segment0_Layer': '0',
-        
-    }
-    # Write to a NRRD file
-    nrrd.write(filename, results, my_header)
+    results = results.squeeze().round()
+    results = (1- results)*255
+    os.makedirs("media/mask", exist_ok=True)
+
+    name = image[0].split('/')[-1]
+    filepath =  name
+    imageio.imwrite(filepath,results)
     
     return filename
