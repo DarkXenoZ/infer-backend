@@ -968,25 +968,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     encoding='UTF-8'
                 )
                 try:
-                    # if project.task == "2D Classification":
-                    #     img_nograd = img[0]
-                    #     img_io = io.BytesIO()
-                    #     img_grad = mock_heatmap(img_nograd)
-                    #     img_grad.save(img_io, format='PNG')
-                    #     result.gradcam = InMemoryUploadedFile(img_io,None,img[0],'image/png',img_io.tell,charset=None)
                     if "2D" in project.task:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
                         result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
                         if "Classification" in project.task:
                             try:
                                 img_io = io.BytesIO()
-                                img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
+                                img_grad = make_gradcam(pipeline=pipeline, img_path=filename)
                                 img_grad.save(img_io, format='PNG')
                                 result.gradcam = InMemoryUploadedFile(img_io, None, img_grad, 'image/png', img_io.tell, charset=None)
                             except:
                                 create_log(
                                     user=user,
-                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.model_name} pipeline"
+                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
                                 )
                     else:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img[1])
