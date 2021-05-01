@@ -930,8 +930,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             pipeline = Pipeline.objects.get(id=request.data['pipeline'])
         except:
             return not_found('Pipeline')
-        image_ids = request.data["image_ids"].split(',')
-        image_ids = list(filter(None,image_ids))
+        if isinstance(request.data['image_ids'], list):
+            image_ids = request.data['image_ids']
+        else:
+            image_ids = request.data['image_ids'].split(',')
+            image_ids = list(filter(None,image_ids))
         images = []
         for img in image_ids:
             try:
@@ -1163,8 +1166,11 @@ class ImageViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_class','note'])
         if response[0] != 0:
             return response[1]
-        actual_class = request.data['actual_class'].split(',')
-        actual_class = list(filter(None,actual_class))
+        if isinstance(request.data['actual_class'], list):
+            actual_class = request.data['actual_class']
+        else:
+            actual_class = request.data['actual_class'].split(',')
+            actual_class = list(filter(None,actual_class))
         for diag in actual_class :
             if diag not in image.project.predclasses:
                 return not_found('predClass')
@@ -1305,8 +1311,11 @@ class Image3DViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_class','note'])
         if response[0] != 0:
             return response[1]
-        actual_class = request.data['actual_class'].split(',')
-        actual_class = list(filter(None,actual_class))
+        if isinstance(request.data['actual_class'], list):
+            actual_class = request.data['actual_class']
+        else:
+            actual_class = request.data['actual_class'].split(',')
+            actual_class = list(filter(None,actual_class))
         for diag in actual_class :
             if diag not in image.project.predclasses:
                 return not_found('predClass')
