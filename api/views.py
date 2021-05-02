@@ -759,7 +759,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             list_img = Image.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
             Serializer = ImageSerializer
         else:
-            list_img = Image3D.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image__id', flat=True))
+            list_img = Image3D.objects.filter(project=project).exclude(id__in=PredictResult.objects.filter(pipeline=pipeline).values_list('image3D__id', flat=True))
             Serializer = Image3DSerializer
         return Response(
                 {
