@@ -633,15 +633,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(project, request)
         except:
             return err_no_permission
-        try:
-            images = Image.objects.filter(project=project)
-        except:
-            return Response(
-                {'message': "Empty project"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            # images_in_process = Image.objects.filter(project=project,status=1)         
+        try:   
             queue = Queue.objects.filter(project=project)
             for q in queue:
                 if q.pipeline.model_type =="CLARA":
