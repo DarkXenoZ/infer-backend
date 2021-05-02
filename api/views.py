@@ -1258,7 +1258,7 @@ class Image3DViewSet(viewsets.ModelViewSet):
         except:
             return not_found('Image3D')
         if image.status >=2 :
-            result = PredictResult.objects.filter(image=image)
+            result = PredictResult.objects.filter(image3D=image)
             return Response(
             {
                 'image': ProjectImage3DSerializer(image, many=False).data,
