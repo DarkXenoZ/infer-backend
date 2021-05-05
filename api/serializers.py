@@ -89,7 +89,7 @@ class PipelineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pipeline
-        fields = ("id","name","pipeline_id","operator","description","clara_pipeline_name","model_name","model_type")
+        fields = ("id","name","pipeline_id","operator","description","clara_pipeline_name","model_name","model_type","netInputname","netOutputname")
 
 class UserProjectSerializer(serializers.ModelSerializer):
     users = OnlyUserSerializer(many=True)
