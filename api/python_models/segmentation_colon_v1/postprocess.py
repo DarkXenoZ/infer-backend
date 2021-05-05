@@ -7,8 +7,7 @@ def postprocess(results,image,predResult):
     results = (1- results)*255
     os.makedirs("media/mask", exist_ok=True)
 
-    name = image[0].split('/')[-1]
-    filepath =  name
+    filepath = image[0].split('/')[-1]
     imageio.imwrite(filepath,results)
     
-    return filename
+    return filepath
