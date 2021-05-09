@@ -14,3 +14,4 @@ albumentations
 segmentation-models-pytorch
 pynrrd
 scikit-image
+pynvml
