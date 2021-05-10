@@ -69,7 +69,7 @@ def check_staff_permission(project, request):
     return request.user if request.user.is_staff else project.users.get(username=request.user.username)
 
 class UtilViewSet(viewsets.ModelViewSet):
-
+    queryset = ''
     @action(detail=True, methods=['GET'], )    
     def check_usage(self, request, pk=None):
         nvmlInit()
