@@ -20,9 +20,9 @@ import PIL
 import io
 from zipfile import ZipFile
 import cv2
-
+from pynvml import *
 from django.core.files.uploadedfile import InMemoryUploadedFile
-
+import psutil
 # Create your views here.
 from django.http import HttpResponse
 
@@ -67,6 +67,24 @@ def check_arguments(request_arr, args):
 
 def check_staff_permission(project, request):
     return request.user if request.user.is_staff else project.users.get(username=request.user.username)
+
+class UtilViewSet(viewsets.ModelViewSet):
+
+    @action(detail=True, methods=['GET'], )    
+    def check_usage(self, request, pk=None):
+        nvmlInit()
+        h = nvmlDeviceGetHandleByIndex(0)
+        info = nvmlDeviceGetMemoryInfo(h)
+        RAM_used = psutil.virtual_memory()[2]
+        return Response(
+            {
+                'total': info.total,
+                'free' : info.free,
+                'used' : info.used,
+                f'RAM memory % used' : RAM_used
+            },
+            status=status.HTTP_200_OK
+        )
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
