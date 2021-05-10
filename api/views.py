@@ -77,10 +77,8 @@ class UtilViewSet(viewsets.ViewSet):
         RAM_used = psutil.virtual_memory()[2]
         return Response(
             {
-                'total': info.total,
-                'free' : info.free,
-                'used' : info.used,
-                f'RAM memory % used' : RAM_used
+                'GPU' : info.used/info.total * 100,
+                f'MEM' : RAM_used
             },
             status=status.HTTP_200_OK
         )
