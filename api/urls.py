@@ -11,7 +11,7 @@ router.register('project', ProjectViewSet)
 router.register('pipeline', PipelineViewSet)
 router.register('predictResult', PredictResultViewSet)
 router.register('image3D', Image3DViewSet)
-router.register('util',UtilViewSet,basename='util')
+router.register('util',UtilViewSet)
 urlpatterns = [
     path('', include(router.urls)),
 ]
