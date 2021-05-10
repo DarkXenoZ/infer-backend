@@ -68,10 +68,9 @@ def check_arguments(request_arr, args):
 def check_staff_permission(project, request):
     return request.user if request.user.is_staff else project.users.get(username=request.user.username)
 
-class UtilViewSet(viewsets.ModelViewSet):
-    queryset = ''
+class UtilViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['GET'], )    
-    def check_usage(self, request, pk=None):
+    def check_usage(self, request):
         nvmlInit()
         h = nvmlDeviceGetHandleByIndex(0)
         info = nvmlDeviceGetMemoryInfo(h)
