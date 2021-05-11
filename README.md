@@ -21,6 +21,9 @@ infer-backend is a backend server stack for the project using Django REST Framew
 
 	BROWSER	/admin/
 	POST	/auth/
+	GET /api/util/check_usage
+	GET /api/util/check_server_status
+	POST /api/util/restart
 	GET	/api/log/
 	GET	/api/user/
 	POST	/api/user/		(username,password,first_name,last_name,email)
@@ -39,7 +42,7 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	POST	/api/project/<project_id>/add_user_batch/		(users) users ex : user1,user2,user3	
 	GET	/api/project/<project_id>/list_pipeline/	(id)
 	POST	/api/project/<project_id>/add_pipeline/	(name,description,model_type
-	(CLARA:(pipeline_id,operator,clara_pipeline_name),NON CLARA:(model_name,netInputname,netOutputname))
+	(CLARA:(pipeline_id,operator,clara_pipeline_name),NON CLARA:(model_name))
 
 	POST	/api/project/<project_id>/upload_dicom/		(dicom)
 	POST	/api/project/<project_id>/upload_image/		(image,patient_name,patient_id,physician_name,patient_age,content_date:YMD)
