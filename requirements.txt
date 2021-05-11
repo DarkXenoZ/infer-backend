@@ -9,3 +9,4 @@ tensorflow
 numpy
 matplotlib
 celery
+pynrrd
