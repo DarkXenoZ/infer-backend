@@ -25,6 +25,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import psutil
 # Create your views here.
 from django.http import HttpResponse
+import pynrrd
 
 err_invalid_input = Response(
     {'message': 'please recheck input fields'},
@@ -78,10 +79,36 @@ class UtilViewSet(viewsets.ViewSet):
         return Response(
             {
                 'GPU' : info.used/info.total * 100,
-                f'MEM' : RAM_used
+                'MEM' : RAM_used
             },
             status=status.HTTP_200_OK
         )
+
+    @action(detail=False, methods=['GET'], )    
+    def check_server_status(self, request):
+        clara_status = subprocess.check_output(f'kubectl get pods | grep "clara-platform" ', shell=True, encoding='UTF-8')
+        clara_status = ("Running" in clara_status)
+        trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
+        trtis_status = (len(trtis_status)>0)
+        return Response(
+            {
+                'trtis_status' : trtis_status,
+                'clara_status' : clara_status
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=False, methods=['POST'], )    
+    def restart(self, request):
+        clara_status = subprocess.check_output(f'/root/claracli/clara-platform restart -y ', shell=True, encoding='UTF-8')
+        trtis_status = subprocess.check_output(f'docker restart deepmed_trtis ', shell=True, encoding='UTF-8')
+        return Response(
+            {
+                'message' : "done"
+            },
+            status=status.HTTP_200_OK
+        )
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -601,7 +628,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         else:
             response = check_arguments(
                 request.data, 
-                ["name","description","model_name","netInputname","netOutputname"]
+                ["name","description","model_name"]
                 )
         if response[0] != 0:
             return response[1]
@@ -624,8 +651,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             pipeline.clara_pipeline_name = request.data['clara_pipeline_name']
         else:
             pipeline.model_name = request.data['model_name']
-            pipeline.netInputname = request.data['netInputname']
-            pipeline.netOutputname = request.data['netOutputname']
 
         pipeline.save()
         create_log(user=request.user,
@@ -1204,6 +1229,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['actual_mask','note'])
         if response[0] != 0:
             return response[1]
+        
         image.actual_mask = request.data['actual_mask']
         image.status = 3
         image.note = request.data['note']
