@@ -43,8 +43,6 @@ class Pipeline(models.Model):
     operator =  models.CharField(max_length=50,null=True,blank=True)
     model_name = models.CharField(max_length=100,null=True,blank=True)
     model_type = models.CharField(max_length=10,choices=MODEL_CHOICES)
-    netInputname = models.CharField(max_length=50,null=True,blank=True)
-    netOutputname = models.CharField(max_length=50,null=True,blank=True)
     description = models.CharField(max_length=500,default='')
     clara_pipeline_name = models.CharField(max_length=50,null=True,blank=True,default='empty')
     project = models.ForeignKey(
