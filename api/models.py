@@ -86,7 +86,7 @@ class Image(models.Model):
     def __str__(self):
         return self.data8.name
 
-    
+
 
 class PredictResult(models.Model):
     gradcam = models.FileField(upload_to='imagegrad/')
@@ -146,3 +146,5 @@ class Log(models.Model):
             return '%s: %s' % (self.user.username, self.desc,)
         except:
             return '<Deleted>: %s' % (self.desc,)
+
+
