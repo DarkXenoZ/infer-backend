@@ -5,7 +5,7 @@ psycopg2-binary
 pydicom
 imageio
 opencv-python
-tensorflow
+tensorflow-cpu
 numpy
 matplotlib
 celery  
