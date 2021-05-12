@@ -86,8 +86,11 @@ class UtilViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['GET'], )    
     def check_server_status(self, request):
-        clara_status = subprocess.check_output(f'kubectl get pods | grep "clara-platform" ', shell=True, encoding='UTF-8')
-        clara_status = ("Running" in clara_status)
+        try:
+            clara_status = subprocess.check_output(f'kubectl get pods | grep "clara-platform" ', shell=True, encoding='UTF-8')
+            clara_status = ("Running" in clara_status)
+        except:
+            clara_status = False
         trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
         trtis_status = (len(trtis_status)>0)
         return Response(
@@ -100,8 +103,8 @@ class UtilViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['POST'], )    
     def restart(self, request):
-        clara_status = subprocess.run(f'/root/claracli/clara-platform restart -y ', shell=True)
-        trtis_status = subprocess.run(f'docker restart deepmed_trtis ', shell=True)
+        clara_status = subprocess.Popen(f'/root/claracli/clara-platform restart -y ', shell=True)
+        trtis_status = subprocess.Popen(f'docker restart deepmed_trtis ', shell=True)
         return Response(
             {
                 'message' : "done"
