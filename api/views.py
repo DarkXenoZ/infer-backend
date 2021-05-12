@@ -25,7 +25,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import psutil
 # Create your views here.
 from django.http import HttpResponse
-import pynrrd
+import nrrd
 
 err_invalid_input = Response(
     {'message': 'please recheck input fields'},
