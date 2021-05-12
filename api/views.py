@@ -100,8 +100,8 @@ class UtilViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['POST'], )    
     def restart(self, request):
-        clara_status = subprocess.check_output(f'/root/claracli/clara-platform restart -y ', shell=True, encoding='UTF-8')
-        trtis_status = subprocess.check_output(f'docker restart deepmed_trtis ', shell=True, encoding='UTF-8')
+        clara_status = subprocess.run(f'/root/claracli/clara-platform restart -y ', shell=True)
+        trtis_status = subprocess.run(f'docker restart deepmed_trtis ', shell=True)
         return Response(
             {
                 'message' : "done"
