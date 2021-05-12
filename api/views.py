@@ -91,8 +91,11 @@ class UtilViewSet(viewsets.ViewSet):
             clara_status = ("Running" in clara_status)
         except:
             clara_status = False
-        trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
-        trtis_status = (len(trtis_status)>0)
+        try:
+            trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
+            trtis_status = (len(trtis_status)>0)
+        except:
+            trtis_status = False
         return Response(
             {
                 'trtis_status' : trtis_status,
