@@ -379,7 +379,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     
     def list(self, request):
-        queryset = Project.objects.all().filter(users__contain==request.user)
+        queryset = Project.objects.all()
+        if not request.user.is_staff:
+            queryset = queryset.filter(users__contain==request.user)
         serializer_class = UserProjectSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
