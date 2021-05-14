@@ -286,19 +286,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return err_not_found
 
 
-    @action(methods=['GET'], detail=True)
-    def projects(self, request, pk=None):
-        user = User.objects.get(username=pk)
-        project_list = user.projects
-        serializer_class = ProjectSerializer
-        if len(project_list) == 0:
-            return err_not_found
-        return Response(
-            serializer_class(project_list, many=True).data,
-            status=status.HTTP_200_OK,
-        )
-
-
 class LogViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserLogSerializer
@@ -379,9 +366,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     
     def list(self, request):
-        queryset = Project.objects.all()
-        if not request.user.is_staff:
-            queryset = queryset.filter(users__contains==request.user)
+        if request.user.is_staff:
+            queryset = Project.objects.all()
+        else:
+            queryset = request.user.projects
         serializer_class = UserProjectSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
