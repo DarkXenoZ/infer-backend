@@ -79,7 +79,7 @@ class UserSerializer(serializers.ModelSerializer):
     projects = ProjectSerializer(many=True)
     class Meta:
         model = User
-        fields = ("username", "first_name", "last_name","email","projects")
+        fields = ("username", "first_name", "last_name","email","projects", "is_staff")
 
 
 class PipelineSerializer(serializers.ModelSerializer):
