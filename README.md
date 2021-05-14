@@ -31,7 +31,6 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	DELETE	/api/user/<username>/
 	PUT	/api/user/<username>/		(first_name | last_name | email)
 	PUT	/api/user/<username>/update_batch		(users, (first_name | last_name | email))
-	GET	/api/user/<username>/project/
 	PUT	/api/user/<username>/change_password	(password)
 	GET	/api/project/	
 	POST	/api/project/	(name,description,task,cover,predclasses(optional)) predclasses ex : covid,normal
