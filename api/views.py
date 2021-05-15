@@ -386,16 +386,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'description',
             'task',
             'cover',
-            'predclasses'
         ])
         if response[0] != 0:
             return response[1]
-        proj={}
-        proj['name'] = str(request.data['name'])
-        proj['description'] = request.data['description']
-        proj['cover'] = request.data['cover']
-        proj['task'] = request.data['task']
-        proj['predclasses'] = request.data['predclasses'].split(',')
+        project = Project()
+        project.name = str(request.data['name'])
+        project.description = request.data['description']
+        project.cover = request.data['cover']
+        project.task = request.data['task']
+        if "Classification" in project.task:  
+            try:  
+                project.predclasses = request.data['predclasses'].split(',')
+            except:
+                return err_invalid_input
         try:
             Project.objects.get(name=proj['name'])
             return Response(
@@ -403,17 +406,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except:
-            project_serializer = ProjectSerializer(data=proj)
-            if project_serializer.is_valid():
-                project_serializer.save() 
-            else:
-                return err_invalid_input  
+            project.save()
         create_log(user=request.user,
-                   desc=f"Project: {proj['name']} has been created by {request.user.username}" )
+                   desc=f"Project: {project.name} has been created by {request.user.username}" )
         return Response(
             {
                 'message': 'The Project has been created',
-                'result': (project_serializer).data,
             },
             status=status.HTTP_200_OK
         )
