@@ -695,7 +695,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 shell=True, 
                                 encoding='UTF-8'
                             )  
-                            file_path= f"tmp2d/{q.image.name.replace('png','.csv')}"
+                            file_path= glob.glob("tmp2d/*.csv")[0]
                             with open(file_path, 'r') as f: 
                                 csvReader = csv.reader(f) 
                                 for rows in csvReader: 
