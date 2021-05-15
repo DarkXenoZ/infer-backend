@@ -866,7 +866,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
                 {
                     'message': 'Image uploaded',
-                    'result': ImageProjectSerializer(project, many=False).data,
                 },
                 status=status.HTTP_200_OK
             )
@@ -909,7 +908,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
                 {
                     'message': 'Image uploaded',
-                    'result': ImageProjectSerializer(project, many=False).data,
                 },
                 status=status.HTTP_200_OK
             )
@@ -954,7 +952,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
                 {
                     'message': 'Image uploaded',
-                    'result': Image3DProjectSerializer(project, many=False).data,
                 },
                 status=status.HTTP_200_OK
             )
