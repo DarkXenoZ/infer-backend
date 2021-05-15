@@ -34,8 +34,7 @@ def not_found(Object):
 @shared_task
 def make_gradcam(
     pipeline,
-    img_path,
-    predclasses
+    img_path
 ):  
     try:
         img = PIL.Image.open(os.path.join('/backend/media',img_path))
@@ -45,7 +44,6 @@ def make_gradcam(
         preprocessImage = preprocessModule.preprocess(img_path)
         gradcam_model = GradcamModel(os.path.join('/backend/api','python_models',pipeline.clara_pipeline_name,'model.trt.pb'))
         heatmap = gradcam_model.gradcam(preprocessImage)
-        logits = gradcam_model.predict(preprocessImage)
         heatmap = np.uint8(255 * heatmap)
         jet = cm.get_cmap("jet")
         jet_colors = jet(np.arange(256))[:, :3]
@@ -55,7 +53,7 @@ def make_gradcam(
         jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
         superimposed_img = jet_heatmap * 0.4 + img
         superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
-        return superimposed_img,predclasses[np.argmax(logits[0])]
+        return superimposed_img
     except Exception as e:
         print('gradcam error:\n',str(e))
         return None
