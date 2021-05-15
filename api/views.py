@@ -694,40 +694,40 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 f"/root/claracli/clara download {q.job}:/operators/{q.pipeline.operator}/*.csv  tmp2d/", 
                                 shell=True, 
                                 encoding='UTF-8'
-                            )
-                            q.delete()    
-                        file_path= f"tmp2d/{q.image.name}.csv"
-                        with open(file_path, 'r') as f: 
-                            csvReader = csv.reader(f) 
-                            for rows in csvReader: 
-                                pred = {}
-                                for result in rows[1:]:
-                                    diag, precision = result.split(":")
-                                    pred[diag]=precision
-                                max_diag = max(pred,key=lambda k: pred[k])
-                                pred=json.dumps(pred)
-                                name = rows[0].split("/")[-1]
-                                img = q.image
-                                img.predclass = max_diag
-                                img.status= 2
-                                img.save()
-                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                predResult.predicted_class = pred
-                                predResult.save()
-                        os.remove(file_path)
-                        try:
-                            img_io = io.BytesIO()
-                            image_path = q.image.data.name
-                            img_grad = make_gradcam(pipeline=pipeline, img_path=image_path)
-                            img_grad.save(img_io, format='PNG')
-                            grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
-                            gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=q.image.predclass)
-                            gradcam.save()
-                        except:
-                            create_log(
-                                user=user,
-                                desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
-                            )      
+                            )  
+                            file_path= f"tmp2d/{q.image.name[:-4]}.csv"
+                            with open(file_path, 'r') as f: 
+                                csvReader = csv.reader(f) 
+                                for rows in csvReader: 
+                                    pred = {}
+                                    for result in rows[1:]:
+                                        diag, precision = result.split(":")
+                                        pred[diag]=precision
+                                    max_diag = max(pred,key=lambda k: pred[k])
+                                    pred=json.dumps(pred)
+                                    name = rows[0].split("/")[-1]
+                                    img = q.image
+                                    img.predclass = max_diag
+                                    img.status= 2
+                                    img.save()
+                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                    predResult.predicted_class = pred
+                                    predResult.save()
+                            os.remove(file_path)
+                            q.delete()  
+                            try:
+                                img_io = io.BytesIO()
+                                image_path = q.image.data.name
+                                img_grad = make_gradcam(pipeline=pipeline, img_path=image_path)
+                                img_grad.save(img_io, format='PNG')
+                                grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
+                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=q.image.predclass)
+                                gradcam.save()
+                            except:
+                                create_log(
+                                    user=user,
+                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
+                                )      
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
@@ -735,25 +735,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 shell=True, 
                                 encoding='UTF-8'
                             )
-                            q.delete()    
-                        files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.csv")
-                        for file_path in files_path:
-                            with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f)
-                                pred = {} 
-                                for rows in csvReader: 
-                                    pred[rows[2]] = rows[1]
-                                max_diag = max(pred,key=lambda k: pred[k])
-                                pred=json.dumps(pred)
-                                name = rows[0].split("/")[-1]
-                                img = q.image3D
-                                img.predclass = max_diag
-                                img.status= 2
-                                img.save()
-                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)
-                                predResult.predicted_class = pred
-                                predResult.save()
-                            os.remove(file_path)
+                               
+                            files_path= glob.glob(f"media/image3D/{q.image3D.name}/*.csv")
+                            for file_path in files_path:
+                                with open(file_path, 'r') as f: 
+                                    csvReader = csv.reader(f)
+                                    pred = {} 
+                                    for rows in csvReader: 
+                                        pred[rows[2]] = rows[1]
+                                    max_diag = max(pred,key=lambda k: pred[k])
+                                    pred=json.dumps(pred)
+                                    name = rows[0].split("/")[-1]
+                                    img = q.image3D
+                                    img.predclass = max_diag
+                                    img.status= 2
+                                    img.save()
+                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=img)
+                                    predResult.predicted_class = pred
+                                    predResult.save()
+                                os.remove(file_path)
+                            q.delete() 
                     elif project.task == "3D Segmentation":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
@@ -762,7 +763,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 shell=True, 
                                 encoding='UTF-8'
                             )
-                            q.delete()
                             predResult = PredictResult.objects.get(pipeline=q.pipeline,image3D=q.image3D)    
                             mask = Mask()
                             mask.result = predResult
@@ -781,6 +781,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             mask.save()
                             os.remove(maskname)
                             shutil.rmtree(results_path)
+                            q.delete()
                     
         except:
             pass
