@@ -60,7 +60,7 @@ class Pipeline(models.Model):
 
     
 class Image(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     data = models.FileField(upload_to='image/')
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
