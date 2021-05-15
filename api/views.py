@@ -690,26 +690,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 encoding='UTF-8'
                             )
                             q.delete()    
-                        files_path= glob.glob("tmp2d/*.csv")
-                        for file_path in files_path:
-                            with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f) 
-                                for rows in csvReader: 
-                                    pred = {}
-                                    for result in rows[1:]:
-                                        diag, precision = result.split(":")
-                                        pred[diag]=precision
-                                    max_diag = max(pred,key=lambda k: pred[k])
-                                    pred=json.dumps(pred)
-                                    name = rows[0].split("/")[-1]
-                                    img = q.image
-                                    img.predclass = max_diag
-                                    img.status= 2
-                                    img.save()
-                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                    predResult.predicted_class = pred
-                                    predResult.save()
-                            os.remove(file_path)
+                        file_path= f"tmp2d/{q.image.name}.csv"
+                        with open(file_path, 'r') as f: 
+                            csvReader = csv.reader(f) 
+                            for rows in csvReader: 
+                                pred = {}
+                                for result in rows[1:]:
+                                    diag, precision = result.split(":")
+                                    pred[diag]=precision
+                                max_diag = max(pred,key=lambda k: pred[k])
+                                pred=json.dumps(pred)
+                                name = rows[0].split("/")[-1]
+                                img = q.image
+                                img.predclass = max_diag
+                                img.status= 2
+                                img.save()
+                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                predResult.predicted_class = pred
+                                predResult.save()
+                        os.remove(file_path)
                         try:
                             img_io = io.BytesIO()
                             image_path = q.image.data.name
@@ -722,8 +721,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             create_log(
                                 user=user,
                                 desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
-                            )
-                    ### not done        
+                            )      
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
