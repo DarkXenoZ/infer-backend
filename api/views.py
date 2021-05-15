@@ -129,6 +129,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'first_name',
             'last_name',
             'email',
+            'admin'
         ])
         if response[0] != 0:
             return response[1]
@@ -138,7 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
-
+        admin = request.data['admin']
         try:
             User.objects.get(username=username)
             return Response(
@@ -148,7 +149,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             base_user = User.objects.create_user(username=username, password=password,
                                                  first_name=first_name, last_name=last_name,
-                                                 email=email)
+                                                 email=email,is_staff=admin)
         try:
             base_user.full_clean()
         except ValidationError as ve:
@@ -206,6 +207,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 pass
             try:
                 user.email = request.data["email"]
+            except:
+                pass
+            try:
+                user.is_staff = request.data["admin"]
             except:
                 pass
             user.save()
