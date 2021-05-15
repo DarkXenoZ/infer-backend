@@ -710,6 +710,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                     predResult.predicted_class = pred
                                     predResult.save()
                             os.remove(file_path)
+                        try:
+                            img_io = io.BytesIO()
+                            image_path = q.image.data.name
+                            img_grad = make_gradcam(pipeline=pipeline, img_path=image_path)
+                            img_grad.save(img_io, format='PNG')
+                            grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
+                            gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=q.image.predclass)
+                            gradcam.save()
+                        except:
+                            create_log(
+                                user=user,
+                                desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
+                            )
                     ### not done        
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
@@ -1000,19 +1013,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     if "2D" in project.task:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
                         result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
-                        if "Classification" in project.task:
-                            try:
-                                img_io = io.BytesIO()
-                                img_grad,predclass = make_gradcam(pipeline=pipeline, img_path=img[0],predclasses=project.predclasses)
-                                img_grad.save(img_io, format='PNG')
-                                grad = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
-                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=predclass)
-                                gradcam.save()
-                            except:
-                                create_log(
-                                    user=user,
-                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
-                                )
                     else:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img[1])
                         result = PredictResult.objects.create(pipeline=pipeline,image3D=img[1])
