@@ -139,7 +139,9 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
+        print(request.data['admin'])
         admin = request.data['admin'] == "true"
+        print(admin)
 
         try:
             User.objects.get(username=username)
@@ -152,16 +154,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                                  first_name=first_name, last_name=last_name,
                                                  email=email)
             base_user.is_staff = admin
-        try:
-            base_user.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            base_user.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
+            base_user.save()
         Token.objects.create(user=base_user)
         create_log(user=base_user,
                    desc="User %s has been created" % base_user.username)
