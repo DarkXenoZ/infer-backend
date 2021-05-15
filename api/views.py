@@ -139,9 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
-        print(request.data['admin'])
         admin = request.data['admin'] == "true"
-        print(admin)
 
         try:
             User.objects.get(username=username)
@@ -205,7 +203,7 @@ class UserViewSet(viewsets.ModelViewSet):
             except:
                 pass
             try:
-                user.is_staff = request.data["admin"]
+                user.is_staff = request.data["admin"]=="true"
             except:
                 pass
             user.save()
@@ -240,7 +238,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 except:
                     pass
                 try:
-                    user.is_staff = request.data["admin"]
+                    user.is_staff = request.data["admin"]=="true"
                 except:
                     pass
                 user.save()
@@ -330,6 +328,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
+        if not request.user.is_staff and request.user not in project.users:
+            return err_no_permission
         if "2D" in project.task:
             images = Image.objects.filter(project=project)
             imgSerializer = ImageSerializer
@@ -539,6 +539,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=pk)
         except:
             return not_found('Project')
+        if not request.user.is_staff and request.user not in project.users:
+            return err_no_permission
         try:
             pipeline = Pipeline.objects.filter(project=project)
         except:
@@ -1059,12 +1061,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
             pipeline = Pipeline.objects.get(id=pk)
         except:
             return not_found('Pipeline')
-
+        if not request.user.is_staff and request.user not in pipeline.project.users:
+            return err_no_permission
         serializer_class = PipelineSerializer
         return Response(serializer_class(pipeline, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
         queryset = Pipeline.objects.all()
         serializer_class = PipelineSerializer
         return Response(serializer_class(queryset, many=True).data,
@@ -1154,6 +1159,8 @@ class ImageViewSet(viewsets.ModelViewSet):
             image = Image.objects.get(id=pk)
         except:
             return not_found('Image')
+        if not request.user.is_staff and request.user not in image.project.users:
+            return err_no_permission
         if image.status >=2 :
             result = PredictResult.objects.filter(image=image)
             return Response(
@@ -1303,6 +1310,8 @@ class Image3DViewSet(viewsets.ModelViewSet):
             image = Image3D.objects.get(id=pk)
         except:
             return not_found('Image3D')
+        if not request.user.is_staff and request.user not in image.project.users:
+            return err_no_permission
         if image.status >=2 :
             result = PredictResult.objects.filter(image3D=image)
             return Response(
@@ -1446,12 +1455,16 @@ class PredictResultViewSet(viewsets.ModelViewSet):
             result = Diag.objects.get(id=pk)
         except:
             return not_found('PredictResult')
+        if not request.user.is_staff and request.user not in result.pipeline.project.users:
+            return err_no_permission
 
         serializer_class = PredictResultSerializer
         return Response(serializer_class(result, many=False).data,
                         status=status.HTTP_200_OK, )       
     
     def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
         queryset = PredictResult.objects.all()
         serializer_class = PredictResultSerializer
         return Response(serializer_class(queryset, many=True).data,
