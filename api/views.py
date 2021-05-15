@@ -875,21 +875,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         if response[0] != 0:
             return response[1]
-        imgs={}
-        imgs['patient_name']= request.data['patient_name']
-        imgs['patient_id'] =  request.data['patient_id']
-        imgs['physician_name'] =  request.data['physician_name']
-        imgs['patient_age'] =  request.data['patient_age']
-        imgs['content_date'] = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
-        imgs['data'] = request.data['image']
-        imgs['name'] = request.data['image'].name
-        imgs['status'] = 0
-        imgs['project'] = project.pk
-        img_serializer = UploadImageSerializer(data=imgs)
-        if img_serializer.is_valid():
-            img_serializer.save() 
-        else:
-            return Response({'message':img_serializer.errors},) 
+        imgs=Image()
+        imgs.patient_name = request.data['patient_name']
+        imgs.patient_id =  request.data['patient_id']
+        imgs.physician_name =  request.data['physician_name']
+        imgs.patient_age =  request.data['patient_age']
+        imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
+        imgs.data = request.data['image']
+        imgs.name = request.data['image'].name
+        imgs.status = 0
+        imgs.project = project
+        imgs.save()
+        
         create_log(user=request.user,
                    desc=f"{request.user.username} upload {imgs['name']}")
         return Response(
