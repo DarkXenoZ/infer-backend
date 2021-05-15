@@ -12,15 +12,21 @@ class MaskSerializer(serializers.ModelSerializer):
         model = Mask
         fields = ("mask",)
 
+class GradcamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gradcam
+        fields = ("predclass","gradcam",)
+
 class PredictResultSerializer(serializers.ModelSerializer):
     predicted_class = serializers.JSONField()
     pipeline_name = serializers.CharField(
         source='pipeline.name'
     )
     predicted_mask = MaskSerializer(many=True)
+    gradcams = GradcamSerializer(many=True)
     class Meta:
         model = PredictResult
-        fields = ("gradcam","pipeline_name","predicted_class","predicted_mask","timestamp")
+        fields = ("pipeline_name","predicted_class","predicted_mask","timestamp","gradcams")
 
 class ImageSerializer(serializers.ModelSerializer):
     result = PredictResultSerializer(many=True)

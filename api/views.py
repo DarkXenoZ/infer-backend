@@ -461,7 +461,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     predResults = PredictResult.objects.filter(image=image)
                     for result in predResults:
                         if "Classification" in project.task :
-                            os.remove(os.path.join("media",result.gradcam.name))
+                            gradcams = Gradcam.objects.filter(predictresult=result)
+                            for gradcam in gradcams:
+                                os.remove(os.path.join("media",gradcam.gradcam.name))
                         else:
                             masks = Mask.objects.filter(result=result)
                             for mask in masks:
@@ -475,7 +477,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     predResults = PredictResult.objects.filter(image3D=image)
                     for result in predResults:
                         if "Classification" in project.task :
-                            os.remove(os.path.join("media",result.gradcam.name))
+                            gradcams = Gradcam.objects.filter(predictresult=result)
+                            for gradcam in gradcams:
+                                os.remove(os.path.join("media",gradcam.gradcam.name))
                         else:
                             masks = Mask.objects.filter(result=result)
                             for mask in masks:
@@ -1002,9 +1006,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         if "Classification" in project.task:
                             try:
                                 img_io = io.BytesIO()
-                                img_grad = make_gradcam(pipeline=pipeline, img_path=img[0])
+                                img_grad,predclass = make_gradcam(pipeline=pipeline, img_path=img[0],predclasses=project.predclasses)
                                 img_grad.save(img_io, format='PNG')
-                                result.gradcam = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
+                                grad = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
+                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=predclass)
                             except:
                                 create_log(
                                     user=user,
@@ -1127,7 +1132,9 @@ class PipelineViewSet(viewsets.ModelViewSet):
             predResults = PredictResult.objects.filter(pipeline=pipeline)
             for result in predResults:
                 if "Classification" in pipeline.project.task :
-                    os.remove(os.path.join("media",result.gradcam.name))
+                    gradcams = Gradcam.objects.filter(predictresult=result)
+                    for gradcam in gradcams:
+                        os.remove(os.path.join("media",gradcam.gradcam.name))
                 else:
                     masks = Mask.objects.filter(result=result)
                     for mask in masks:
@@ -1255,7 +1262,9 @@ class ImageViewSet(viewsets.ModelViewSet):
             predResults = PredictResult.objects.filter(image=image)
             for result in predResults:
                 if "Classification" in image.project.task :
-                    os.remove(os.path.join("media",result.gradcam.name))
+                    gradcams = Gradcam.objects.filter(predictresult=result)
+                    for gradcam in gradcams:
+                        os.remove(os.path.join("media",gradcam.gradcam.name))
                 else:
                     masks = Mask.objects.filter(result=result)
                     for mask in masks:
@@ -1400,7 +1409,9 @@ class Image3DViewSet(viewsets.ModelViewSet):
             predResults = PredictResult.objects.filter(image3D=image)
             for result in predResults:
                 if "Classification" in image.project.task :
-                    os.remove(os.path.join("media",result.gradcam.name))
+                    gradcams = Gradcam.objects.filter(predictresult=result)
+                    for gradcam in gradcams:
+                        os.remove(os.path.join("media",gradcam.gradcam.name))
                 else:
                     masks = Mask.objects.filter(result=result)
                     for mask in masks:

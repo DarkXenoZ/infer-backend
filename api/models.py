@@ -119,7 +119,6 @@ class Image3D(models.Model):
 
 
 class PredictResult(models.Model):
-    gradcam = models.FileField(upload_to='imagegrad/',null=True,blank=True)
     predicted_class = models.JSONField(null=True,blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, )
     pipeline = models.ForeignKey(
@@ -145,13 +144,24 @@ class PredictResult(models.Model):
     class Meta:
         unique_together = ('pipeline','image')
 
+class Gradcam(models.Model):
+    gradcam = models.FileField(upload_to='imagegrad/',null=True,blank=True)
+    predclass = models.CharField(max_length=50)
+    predictresult = models.ForeignKey(
+        PredictResult,
+        related_name='gradcams',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
 class Mask(models.Model):
+    mask = models.FileField(upload_to='mask/')    
     result = models.ForeignKey(
         PredictResult,
         related_name='predicted_mask',
         on_delete = models.CASCADE,
     )
-    mask = models.FileField(upload_to='mask/')    
+    
     
 class Queue(models.Model):
     #JOB_ID Queue
