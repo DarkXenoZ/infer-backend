@@ -151,6 +151,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                                  first_name=first_name, last_name=last_name,
                                                  email=email)
             base_user.is_staff = admin
+            base_user.save()
         try:
             base_user.full_clean()
         except ValidationError as ve:
