@@ -139,7 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
-        admin = request.data['admin'] == "True"
+        admin = request.data['admin'] == "true"
 
         try:
             User.objects.get(username=username)
