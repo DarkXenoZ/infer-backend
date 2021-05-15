@@ -1010,6 +1010,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 img_grad.save(img_io, format='PNG')
                                 grad = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
                                 gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=predclass)
+                                gradcam.save()
                             except:
                                 create_log(
                                     user=user,
