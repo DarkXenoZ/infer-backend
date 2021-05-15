@@ -59,7 +59,7 @@ class GradcamModel():
 
             return heatmap
         
-    def infer(self, img):
+    def predict(self, img):
         with self._sess.graph.as_default():
             feed_dict = {'NV_MODEL_INPUT:0': img, 'NV_IS_TRAINING:0': False}
             return self._sess.run(self._output_layer, feed_dict=feed_dict)
