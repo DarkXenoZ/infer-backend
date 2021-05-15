@@ -139,7 +139,8 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
-        admin = request.data['admin']
+        admin = request.data['admin'] == "True"
+
         try:
             User.objects.get(username=username)
             return Response(
@@ -151,7 +152,6 @@ class UserViewSet(viewsets.ModelViewSet):
                                                  first_name=first_name, last_name=last_name,
                                                  email=email)
             base_user.is_staff = admin
-            base_user.save()
         try:
             base_user.full_clean()
         except ValidationError as ve:
