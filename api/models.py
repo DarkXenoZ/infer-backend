@@ -92,7 +92,7 @@ def content_file_name(instance, filename):
         return os.path.join("image3D",filename.split('.')[0],filename)
 
 class Image3D(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     data = models.FileField(upload_to=content_file_name)
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)

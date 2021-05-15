@@ -129,6 +129,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'first_name',
             'last_name',
             'email',
+            'admin'
         ])
         if response[0] != 0:
             return response[1]
@@ -138,6 +139,9 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
+        print(request.data['admin'])
+        admin = request.data['admin'] == "true"
+        print(admin)
 
         try:
             User.objects.get(username=username)
@@ -149,16 +153,8 @@ class UserViewSet(viewsets.ModelViewSet):
             base_user = User.objects.create_user(username=username, password=password,
                                                  first_name=first_name, last_name=last_name,
                                                  email=email)
-        try:
-            base_user.full_clean()
-        except ValidationError as ve:
-            print(ve)
-            base_user.delete()
-            return Response(
-                str(ve),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            # return err_invalid_input
+            base_user.is_staff = admin
+            base_user.save()
         Token.objects.create(user=base_user)
         create_log(user=base_user,
                    desc="User %s has been created" % base_user.username)
@@ -208,6 +204,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 user.email = request.data["email"]
             except:
                 pass
+            try:
+                user.is_staff = request.data["admin"]
+            except:
+                pass
             user.save()
         except:
             return err_not_found
@@ -237,6 +237,10 @@ class UserViewSet(viewsets.ModelViewSet):
                     pass
                 try:
                     user.email = request.data["email"]
+                except:
+                    pass
+                try:
+                    user.is_staff = request.data["admin"]
                 except:
                     pass
                 user.save()
@@ -690,27 +694,38 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 encoding='UTF-8'
                             )
                             q.delete()    
-                        files_path= glob.glob("tmp2d/*.csv")
-                        for file_path in files_path:
-                            with open(file_path, 'r') as f: 
-                                csvReader = csv.reader(f) 
-                                for rows in csvReader: 
-                                    pred = {}
-                                    for result in rows[1:]:
-                                        diag, precision = result.split(":")
-                                        pred[diag]=precision
-                                    max_diag = max(pred,key=lambda k: pred[k])
-                                    pred=json.dumps(pred)
-                                    name = rows[0].split("/")[-1]
-                                    img = q.image
-                                    img.predclass = max_diag
-                                    img.status= 2
-                                    img.save()
-                                    predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
-                                    predResult.predicted_class = pred
-                                    predResult.save()
-                            os.remove(file_path)
-                    ### not done        
+                        file_path= f"tmp2d/{q.image.name}.csv"
+                        with open(file_path, 'r') as f: 
+                            csvReader = csv.reader(f) 
+                            for rows in csvReader: 
+                                pred = {}
+                                for result in rows[1:]:
+                                    diag, precision = result.split(":")
+                                    pred[diag]=precision
+                                max_diag = max(pred,key=lambda k: pred[k])
+                                pred=json.dumps(pred)
+                                name = rows[0].split("/")[-1]
+                                img = q.image
+                                img.predclass = max_diag
+                                img.status= 2
+                                img.save()
+                                predResult = PredictResult.objects.get(pipeline=q.pipeline,image=img)
+                                predResult.predicted_class = pred
+                                predResult.save()
+                        os.remove(file_path)
+                        try:
+                            img_io = io.BytesIO()
+                            image_path = q.image.data.name
+                            img_grad = make_gradcam(pipeline=pipeline, img_path=image_path)
+                            img_grad.save(img_io, format='PNG')
+                            grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
+                            gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=q.image.predclass)
+                            gradcam.save()
+                        except:
+                            create_log(
+                                user=user,
+                                desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
+                            )      
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
@@ -1000,19 +1015,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     if "2D" in project.task:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
                         result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
-                        if "Classification" in project.task:
-                            try:
-                                img_io = io.BytesIO()
-                                img_grad,predclass = make_gradcam(pipeline=pipeline, img_path=img[0],predclasses=project.predclasses)
-                                img_grad.save(img_io, format='PNG')
-                                grad = InMemoryUploadedFile(img_io, None, img[0], 'image/png', img_io.tell, charset=None)
-                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=predclass)
-                                gradcam.save()
-                            except:
-                                create_log(
-                                    user=user,
-                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
-                                )
                     else:
                         q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img[1])
                         result = PredictResult.objects.create(pipeline=pipeline,image3D=img[1])

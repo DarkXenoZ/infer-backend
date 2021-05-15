@@ -34,8 +34,7 @@ def not_found(Object):
 @shared_task
 def make_gradcam(
     pipeline,
-    img_path,
-    predclasses
+    img_path
 ):  
     try:
         img = PIL.Image.open(os.path.join('/backend/media',img_path))
