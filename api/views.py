@@ -1100,15 +1100,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
             except:
                 pass
             try:
-                pipeline.pipeline_id = request.data["clara_pipeline_name"]
+                pipeline.clara_pipeline_name = request.data["clara_pipeline_name"]
             except:
                 pass
             try:
-                pipeline.pipeline_id = request.data["model_name"]
+                pipeline.model_name = request.data["model_name"]
             except:
                 pass
             try:
-                pipeline.pipeline_id = request.data["model_type"]
+                pipeline.model_type = request.data["model_type"]
             except:
                 pass
             pipeline.save()
