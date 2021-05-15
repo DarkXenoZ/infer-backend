@@ -698,6 +698,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             file_path= glob.glob("tmp2d/*.csv")[0]
                             with open(file_path, 'r') as f: 
                                 csvReader = csv.reader(f) 
+                                # have only 1 row
                                 for rows in csvReader: 
                                     pred = {}
                                     for result in rows[1:]:
@@ -714,20 +715,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                     predResult.predicted_class = pred
                                     predResult.save()
                             os.remove(file_path)
-                            q.delete()  
                             try:
                                 img_io = io.BytesIO()
                                 image_path = q.image.data.name
-                                img_grad = make_gradcam(pipeline=pipeline, img_path=image_path)
+                                img_grad = make_gradcam(pipeline=q.pipeline, img_path=image_path)
                                 img_grad.save(img_io, format='PNG')
                                 grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
-                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=result,predclass=q.image.predclass)
+                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=predResult,predclass=q.image.predclass)
                                 gradcam.save()
                             except:
                                 create_log(
                                     user=user,
-                                    desc=f"{user.username} is unable to create Grad-CAM for image {image.data.name} on {pipeline.clara_pipeline_name} pipeline"
-                                )      
+                                    desc=f"{user.username} is unable to create Grad-CAM for image {q.image.data.name} on {q.pipeline.clara_pipeline_name} pipeline"
+                                )    
+                            q.delete()  
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
