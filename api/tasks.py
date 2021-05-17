@@ -106,7 +106,7 @@ def infer_image(project,pipeline,image,user):
         image[1].status = 2
         image[1].save() 
         if len(result) == 2 and project.task == "2D Classification":
-            for classname,filepath in result[1]:
+            for classname,filepath in result[1].items():
                 grad = Gradcam()
                 grad.predclass = classname
                 grad.gradcam = File(open(filepath,'rb'))
