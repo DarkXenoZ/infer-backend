@@ -1,2 +1,2 @@
 netInputname = 'input.1'
-netOutputname = '486'
+netOutputname = ['486']
