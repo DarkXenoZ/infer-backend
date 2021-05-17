@@ -78,7 +78,7 @@ class UtilViewSet(viewsets.ViewSet):
         # RAM_used = psutil.virtual_memory()[2]
         return Response(
             {
-                'GPU' : 20 #info.used/info.total * 100,
+                'GPU' : 20, #info.used/info.total * 100,
                 'MEM' : 10#RAM_used
             },
             status=status.HTTP_200_OK
@@ -98,7 +98,7 @@ class UtilViewSet(viewsets.ViewSet):
         #     trtis_status = False
         return Response(
             {
-                'trtis_status' : True #trtis_status,
+                'trtis_status' : True, #trtis_status,
                 'clara_status' : True #clara_status
             },
             status=status.HTTP_200_OK
