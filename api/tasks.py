@@ -63,9 +63,10 @@ def make_gradcam(
 
 @shared_task
 def infer_image(project,pipeline,image,user):
+    print("get url")
     url = os.getenv('TRTIS_URL')
     tritonClient = grpcclient.InferenceServerClient(url=url)
-
+    print("import preprocess module")
     preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
     preprocessModule = importlib.import_module(preprocess_module_name)
 
@@ -73,24 +74,27 @@ def infer_image(project,pipeline,image,user):
     util_module = importlib.import_module(util_module_name)
     netInputname = util_module.netInputname
     netOutputname = util_module.netOutputname
-    
+    print("preprocess in task")
     preprocessImage = preprocessModule.preprocess(image[0])
+    print("infer")
     netInput = grpcclient.InferInput(netInputname, preprocessImage.shape, "FP32")
     netOutputList = []
     for outputName in netOutputname:
         netOutputList.append(grpcclient.InferRequestedOutput(outputName))
     netInput.set_data_from_numpy(preprocessImage)
+    print("set I/O")
     Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=netOutputList)
+    print("infered")
     triton_output = []
     for i in range(len(netOutputname)):
         triton_output.append(Output.as_numpy(netOutputname[i]))
     predResult = PredictResult.objects.get(pipeline=pipeline,image=image[1])
-    
+    print("import postprocess module")
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
     postprocessModule = importlib.import_module(postprocess_module_name)
 
     result = postprocessModule.postprocess(triton_output,image)
-
+    print("4task")
     if "Classification" in project.task:
         if len(result[0]) != len(project.predclasses):
             return Response(

@@ -2,6 +2,7 @@ import imageio
 import os
 
 def postprocess(triton_output,image):
+    print("postprocess")
     results = triton_output[0]
     results = results.squeeze().round()
     results = (1- results)*255

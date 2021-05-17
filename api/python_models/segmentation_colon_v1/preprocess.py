@@ -12,12 +12,14 @@ def get_preprocessing_segment_colon(image):
         albu.Lambda(image=smp.encoders.get_preprocessing_fn('resnet34', 'imagenet')),
         albu.Lambda(image=to_tensor, mask=to_tensor),
     ]
+    print("transform")
     transform = albu.Compose(_transform)
     preprocessImage = transform(image=image)["image"]
     preprocessImage = np.expand_dims(preprocessImage,0)
     return preprocessImage
 
 def preprocess(Input):
+    print("preprocess")
     Input = cv2.imread(f"media/{Input}")
     Input = get_preprocessing_segment_colon(Input)
 
