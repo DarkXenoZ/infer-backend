@@ -20,7 +20,7 @@ import PIL
 import io
 from zipfile import ZipFile
 import cv2
-from pynvml import *
+# from pynvml import *
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import psutil
 # Create your views here.
