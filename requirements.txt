@@ -4,7 +4,7 @@ django-cors-headers==3.6.0
 psycopg2-binary
 pydicom
 imageio
-opencv-python
+opencv-python-headless
 tensorflow-cpu
 numpy
 matplotlib
