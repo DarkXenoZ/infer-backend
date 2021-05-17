@@ -20,6 +20,8 @@ import tritonclient.grpc as grpcclient
 from django.core.files import File
 import importlib
 from .gradcam import GradcamModel
+import json
+
 
 
 def create_log(user, desc):
@@ -75,13 +77,13 @@ def infer_image(project,pipeline,image,user):
     preprocessImage = preprocessModule.preprocess(image[0])
     netInput = grpcclient.InferInput(netInputname, preprocessImage.shape, "FP32")
     netOutputList = []
-    for outputName in netOutputName:
+    for outputName in netOutputname:
         netOutputList.append(grpcclient.InferRequestedOutput(outputName))
     netInput.set_data_from_numpy(preprocessImage)
     Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=netOutputList)
     triton_output = []
-    for i in range(len(netOutputName)):
-        triton_output.append(results.as_numpy(netOutputName[i]))
+    for i in range(len(netOutputname)):
+        triton_output.append(results.as_numpy(netOutputname[i]))
     predResult = PredictResult.objects.get(pipeline=pipeline,image=image[1])
     
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
@@ -90,13 +92,35 @@ def infer_image(project,pipeline,image,user):
     result = postprocessModule.postprocess(triton_output,image)
 
     #### เดียวมาแยก
-    mask = Mask()
-    mask.result = predResult
-    mask.mask = File(open(result,'rb'))
-    mask.save()
-    os.remove(result)
-    image[1].status = 2
-    image[1].save()
+    if "Classification" in project.task:
+        if len(result[0]) != len(project.predclasses):
+            return Response(
+                {'message': 'Length of predclasses not equal to Length of result'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        label = dict(zip(project.predclasses,result[0]))
+        pred=json.dumps(label)
+        predResult.predicted_class = pred
+        predResult.save()
+        image[1].predclass = max(label,key=lambda k: label[k])
+        image[1].status = 2
+        image[1].save() 
+        if len(result) == 2 and project.task == "2D Classification":
+            for classname,filepath in result[1]:
+                grad = Gradcam()
+                grad.predclass = classname
+                grad.gradcam = File(open(filepath,'rb'))
+                grad.predictresult = predResult
+                grad.save()
+    elif "Segmentation" in project.task:
+        mask = Mask()
+        mask.result = predResult
+        mask.mask = File(open(result,'rb'))
+        mask.save()
+        os.remove(result)
+        image[1].status = 2
+        image[1].save()
+    
     if "2D" in project.task:
         q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
     else:
