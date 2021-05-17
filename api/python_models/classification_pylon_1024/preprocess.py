@@ -14,6 +14,6 @@ def get_transformed_image(image):
     return transformed_img
 
 def preprocess(Input):
-    img = cv2.imread(os.path.join('/backend/media',Input))
+    img = cv2.imread(os.path.join('/backend/media',Input), cv2.IMREAD_GRAYSCALE)
     transformed_img = get_transformed_image(img)
     return transformed_img
