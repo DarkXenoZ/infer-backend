@@ -117,7 +117,7 @@ def postprocess(triton_output, image):
     normalized_probs = [get_prob(probs_output[i], thr_list[i]) for i in range(len(probs_output))]
     heatmap_output = expit(heatmap_output[0])
 
-    os.makedirs("media/imagegrad", exist_ok=True)
+    os.makedirs("imagegrad_tmp", exist_ok=True)
     selected_class = []
     for class_name in importance_list:
         class_idx = CATEGORIES.index(class_name)
@@ -140,7 +140,7 @@ def postprocess(triton_output, image):
         superimposed_img = blend(original_image, selected_heatmap)
         filename = image[0].split('/')[-1]
         grad_filename = filename[:filename.rfind('.')]+'_'+class_name+'.png'
-        superimposed_img.save(os.path.join('/backend/media/imagegrad', grad_filename))
-        gradcam_dict[class_name] = os.path.join('imagegrad', grad_filename)
+        superimposed_img.save(os.path.join('imagegrad_tmp', grad_filename))
+        gradcam_dict[class_name] = os.path.join('imagegrad_tmp', grad_filename)
 
     return [normalized_probs, gradcam_dict]
