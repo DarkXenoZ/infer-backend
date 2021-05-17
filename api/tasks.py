@@ -91,7 +91,6 @@ def infer_image(project,pipeline,image,user):
 
     result = postprocessModule.postprocess(triton_output,image)
 
-    #### เดียวมาแยก
     if "Classification" in project.task:
         if len(result[0]) != len(project.predclasses):
             return Response(
