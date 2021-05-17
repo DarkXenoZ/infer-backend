@@ -143,4 +143,4 @@ def postprocess(triton_output, image):
         superimposed_img.save(os.path.join('/backend/media/imagegrad', grad_filename))
         gradcam_dict[class_name] = os.path.join('imagegrad', grad_filename)
 
-    return normalized_probs, gradcam_dict
+    return [normalized_probs, gradcam_dict]
