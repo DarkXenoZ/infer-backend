@@ -74,16 +74,22 @@ def infer_image(project,pipeline,image,user):
     
     preprocessImage = preprocessModule.preprocess(image[0])
     netInput = grpcclient.InferInput(netInputname, preprocessImage.shape, "FP32")
-    netOutput = grpcclient.InferRequestedOutput(netOutputname)
+    netOutputList = []
+    for outputName in netOutputName:
+        netOutputList.append(grpcclient.InferRequestedOutput(outputName))
     netInput.set_data_from_numpy(preprocessImage)
-    Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=[netOutput])
-    Output = Output.as_numpy(netOutputname) # output numpy array!
+    Output = tritonClient.infer(model_name=pipeline.model_name, inputs=[netInput], outputs=netOutputList)
+    triton_output = []
+    for i in range(len(netOutputName)):
+        triton_output.append(results.as_numpy(netOutputName[i]))
     predResult = PredictResult.objects.get(pipeline=pipeline,image=image[1])
     
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
     postprocessModule = importlib.import_module(postprocess_module_name)
 
-    result = postprocessModule.postprocess(Output,image,predResult)
+    result = postprocessModule.postprocess(triton_output,image)
+
+    #### เดียวมาแยก
     mask = Mask()
     mask.result = predResult
     mask.mask = File(open(result,'rb'))
