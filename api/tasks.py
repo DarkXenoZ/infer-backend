@@ -112,6 +112,7 @@ def infer_image(project,pipeline,image,user):
                 grad.gradcam = File(open(filepath,'rb'))
                 grad.predictresult = predResult
                 grad.save()
+                os.remove(filepath)
     elif "Segmentation" in project.task:
         mask = Mask()
         mask.result = predResult
