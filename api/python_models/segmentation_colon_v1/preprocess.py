@@ -1,6 +1,6 @@
-import albumentations as albu
+from albumentations import Compose,Lambda
 print("import albu")
-import segmentation_models_pytorch as smp
+from segmentation_models_pytorch.encoders import get_preprocessing_fn
 print("import smp")
 import numpy as np
 print("import np")
@@ -12,7 +12,7 @@ def to_tensor(x, **kwargs):
 def get_preprocessing_segment_colon(image):
     
     _transform = [
-        albu.Lambda(image=smp.encoders.get_preprocessing_fn('resnet34', 'imagenet')),
+        albu.Lambda(image=get_preprocessing_fn('resnet34', 'imagenet')),
         albu.Lambda(image=to_tensor, mask=to_tensor),
     ]
     print("transform")
