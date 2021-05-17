@@ -69,11 +69,12 @@ def infer_image(project,pipeline,image,user):
     print("import preprocess module")
     preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
     preprocessModule = importlib.import_module(preprocess_module_name)
-
+    print("import util")
     util_module_name = f'api.python_models.{pipeline.model_name}.util'
     util_module = importlib.import_module(util_module_name)
     netInputname = util_module.netInputname
     netOutputname = util_module.netOutputname
+    
     print("preprocess in task")
     preprocessImage = preprocessModule.preprocess(image[0])
     print("infer")
