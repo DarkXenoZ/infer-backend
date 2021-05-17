@@ -105,19 +105,23 @@ def blend(img, heatmap):
     superimposed_img = array_to_img(superimposed_img)
     return superimposed_img
 
+def get_prob(prob, thr):
+    if prob>thr: return 0.5+((prob-thr)/(1-thr))*0.5
+    else: return (prob/thr)*0.5
+
 def postprocess(triton_output, image):
     logits_output = triton_output[0]
     heatmap_output = triton_output[1]
 
     probs_output = expit(logits_output[0])
-    binary_label = (probs_output>thr_list).astype(int)
+    normalized_probs = [get_prob(probs_output[i], thr_list[i]) for i in range(len(probs_output))]
     heatmap_output = expit(heatmap_output[0])
 
     os.makedirs("media/imagegrad", exist_ok=True)
     selected_class = []
     for class_name in importance_list:
         class_idx = CATEGORIES.index(class_name)
-        if binary_label[class_idx]==1:
+        if normalized_probs[class_idx]>0.5:
             selected_class.append(class_idx)
             if len(selected_class)==5: break
     if len(selected_class)!=5:
@@ -139,4 +143,4 @@ def postprocess(triton_output, image):
         superimposed_img.save(os.path.join('/backend/media/imagegrad', grad_filename))
         gradcam_dict[class_name] = os.path.join('imagegrad', grad_filename)
 
-    return binary_label, gradcam_dict
+    return normalized_probs, gradcam_dict
