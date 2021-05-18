@@ -85,8 +85,6 @@ class Image(models.Model):
     
     def __str__(self):
         return self.data.name
-    class Meta:
-        unique_together = ('name',)
 
 def content_file_name(instance, filename):
         return os.path.join("image3D",filename.split('.')[0],filename)
@@ -114,8 +112,6 @@ class Image3D(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    class Meta:
-        unique_together = ('name',)
 
 
 class PredictResult(models.Model):
