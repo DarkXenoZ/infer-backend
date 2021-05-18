@@ -20,7 +20,7 @@ import PIL
 import io
 from zipfile import ZipFile
 import cv2
-# from pynvml import *
+from pynvml import *
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import psutil
 # Create your views here.
@@ -72,34 +72,34 @@ def check_staff_permission(project, request):
 class UtilViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['GET'], )    
     def check_usage(self, request):
-        # nvmlInit()
-        # h = nvmlDeviceGetHandleByIndex(0)
-        # info = nvmlDeviceGetMemoryInfo(h)
-        # RAM_used = psutil.virtual_memory()[2]
+        nvmlInit()
+        h = nvmlDeviceGetHandleByIndex(0)
+        info = nvmlDeviceGetMemoryInfo(h)
+        RAM_used = psutil.virtual_memory()[2]
         return Response(
             {
-                'GPU' : 20, #info.used/info.total * 100,
-                'MEM' : 10#RAM_used
+                'GPU' : info.used/info.total * 100,
+                'MEM' : RAM_used
             },
             status=status.HTTP_200_OK
         )
 
     @action(detail=False, methods=['GET'], )    
     def check_server_status(self, request):
-        # try:
-        #     clara_status = subprocess.check_output(f'kubectl get pods | grep "clara-platform" ', shell=True, encoding='UTF-8')
-        #     clara_status = ("Running" in clara_status)
-        # except:
-        #     clara_status = False
-        # try:
-        #     trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
-        #     trtis_status = (len(trtis_status)>0)
-        # except:
-        #     trtis_status = False
+        try:
+            clara_status = subprocess.check_output(f'kubectl get pods | grep "clara-platform" ', shell=True, encoding='UTF-8')
+            clara_status = ("Running" in clara_status)
+        except:
+            clara_status = False
+        try:
+            trtis_status = subprocess.check_output(f'docker ps | grep "deepmed_trtis" ', shell=True, encoding='UTF-8')
+            trtis_status = (len(trtis_status)>0)
+        except:
+            trtis_status = False
         return Response(
             {
-                'trtis_status' : True, #trtis_status,
-                'clara_status' : True #clara_status
+                'trtis_status' : trtis_status,
+                'clara_status' : clara_status
             },
             status=status.HTTP_200_OK
         )
