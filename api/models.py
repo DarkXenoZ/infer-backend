@@ -159,6 +159,7 @@ class Mask(models.Model):
     result = models.ForeignKey(
         PredictResult,
         related_name='predicted_mask',
+        null=True,
         on_delete = models.CASCADE,
     )
     
