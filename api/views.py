@@ -446,7 +446,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return err_not_found
         project.save()
         return Response(
-                ProjectSerializer(project, many=False).data,
+                {'message': 'Project has been updated',
+                 'data': ProjectSerializer(project, many=False).data},
                 status=status.HTTP_200_OK
             )
         
@@ -490,7 +491,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 except: 
                     pass
         project.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response({'message': 'Project has been deleted'},status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'], )    
     def add_user_batch(self, request, pk=None):
@@ -526,7 +527,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             users = ', '.join(users)
             return Response(
             {
-                'message': f'{users} are joined',
+                'message': 'Users in the project have been updated',
                 'result': UserProjectSerializer(project, many=False).data,
             },
             status=status.HTTP_200_OK
@@ -1120,7 +1121,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
         except:
             return err_invalid_input
         return Response(
-                PipelineSerializer(pipeline, many=False).data,
+            {'message': 'Pipeline has been updated',
+             'data': PipelineSerializer(pipeline, many=False).data},
                 status=status.HTTP_200_OK
             )
 
@@ -1145,7 +1147,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         except: 
             pass
         pipeline.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response({'message': 'Pipeline has been deleted'},status=status.HTTP_200_OK)
 
 
 class ImageViewSet(viewsets.ModelViewSet):
