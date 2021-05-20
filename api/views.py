@@ -210,7 +210,8 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return err_not_found
         return Response(
-                UserSerializer(user, many=False).data,
+                {'message': 'User has been updated',
+                 'data': UserSerializer(user, many=False).data},
                 status=status.HTTP_200_OK
             )
 
@@ -258,7 +259,7 @@ class UserViewSet(viewsets.ModelViewSet):
             user.delete()
         except:
             return err_not_found
-        return Response(status=status.HTTP_200_OK)
+        return Response({'message': 'User has been deleted'},status=status.HTTP_200_OK)
     
     @action(methods=['PUT'], detail=True)
     def change_password(self, request, pk=None):
