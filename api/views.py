@@ -799,7 +799,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             mask = Mask()
                             mask.result = predResult
                             img = q.image3D
-                            img.status = 2
+                            img.status = max(2, img.status)
                             img.save()
                             results_path = os.path.join("media","image3D",q.image3D.name,"results")
                             maskname = img.name+".zip"
@@ -938,17 +938,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.name = request.data['image'].name
         imgs.status = 0
         imgs.project = project
-        imgs.save()
-
-        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         try:
             imgs.save()
         except:
-            imgs.delete()
             return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
+        imgs.save()
         create_log(user=request.user,
                    desc=f"{request.user.username} upload {imgs.name}")
         return Response(
@@ -990,17 +988,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         imgs.status = 0
         imgs.project = project
-        imgs.save()
-
-        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         try:
             imgs.save()
         except:
-            imgs.delete()
             return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
+        imgs.save()
         dcm_path = os.path.join("media","image3D",imgs.name,"dcm")
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
             zipObj.extractall(dcm_path)
@@ -1051,20 +1047,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 imgs.data = File(f)
                 imgs.status = 0
                 imgs.project = project
-                imgs.save()
-                f.close()
-                imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
                 try:
                     imgs.save()
                     uploaded.append(file_name)
                     create_log(user=request.user,
                         desc=f"{request.user.username} upload {imgs.name}")
                 except:
-                    imgs.delete()
                     duplicated.append(file_name)
+                f.close()
+                imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
+                imgs.save()
                 os.remove(png_name)    
             elif "3D" in project.task:
-                #TODO add 3D dicom and zip file
                 pass
         return Response(
                 {
@@ -1106,7 +1100,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 else:
                     image = Image3D.objects.get(id=img)
                     images.append((image.name,image))
-                image.status = 1
+                image.status = max(1, image.status)
                 image.save()
             except:
                 return not_found(f'Image (id:{img})')
