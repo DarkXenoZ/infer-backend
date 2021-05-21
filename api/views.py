@@ -138,7 +138,7 @@ class UtilViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['GET'], )    
     def list_local(self, request):
-        files_path = os.listdir("/data/")
+        files_path = os.listdir("/backend/data/")
         return Response(
             {
                 'files_path' : files_path
@@ -990,11 +990,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.name = request.data['image'].name.split('.')[0]
         imgs.data = request.data['image']
 
-
         imgs.status = 0
         imgs.project = project
         imgs.save()
-
 
         imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         all_file = Image3D.objects.filter(project=project)
