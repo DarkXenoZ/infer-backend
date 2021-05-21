@@ -138,10 +138,10 @@ class UtilViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['GET'], )    
     def list_local(self, request):
-        files_path = os.listdir("/backend/data/")
+        files_name = os.listdir("/backend/data/")
         return Response(
             {
-                'files_path' : files_path
+                'files_name' : files_name
             },
             status=status.HTTP_200_OK
         )
