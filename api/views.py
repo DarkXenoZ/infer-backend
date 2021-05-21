@@ -874,17 +874,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         f=open(png_name,'rb')
         imgs.data = File(f)
         f.close()
-        imgs.encryption = hash_file(png_name)
+        imgs.status = 0
+        imgs.project = project
+        imgs.save()
+
+        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         all_file = Image.objects.filter(project=project)
-        for f in all_file:
-            if f.encryption == imgs.encryption:
+        for pj_f in all_file:
+            if pj_f.encryption == imgs.encryption:
                 return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        
-        imgs.status = 0
-        imgs.project = project
         imgs.save()
         os.remove(png_name)    
         create_log(user=request.user,
