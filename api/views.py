@@ -938,18 +938,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.name = request.data['image'].name
         imgs.status = 0
         imgs.project = project
-        imgs.save()
-        
-        #check duplicate
-        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
-        all_file = Image.objects.filter(project=project)
-        for f in all_file:
-            if f.encryption == imgs.encryption:
-                imgs.delete()
-                return  Response(
+        try:
+            imgs.save()
+        except:
+            return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         imgs.save()
         create_log(user=request.user,
                    desc=f"{request.user.username} upload {imgs.name}")
@@ -992,17 +988,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         imgs.status = 0
         imgs.project = project
-        imgs.save()
-
-        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
-        all_file = Image3D.objects.filter(project=project)
-        for f in all_file:
-            if f.encryption == imgs.encryption:
-                imgs.delete()
-                return  Response(
+        try:
+            imgs.save()
+        except:
+            return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         imgs.save()
         dcm_path = os.path.join("media","image3D",imgs.name,"dcm")
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
@@ -1054,29 +1047,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 imgs.data = File(f)
                 imgs.status = 0
                 imgs.project = project
-                imgs.save()
+                try:
+                    imgs.save()
+                    uploaded.append(file_name)
+                    create_log(user=request.user,
+                        desc=f"{request.user.username} upload {imgs.name}")
+                except:
+                    duplicated.append(file_name)
                 f.close()
                 imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
-                all_file = Image.objects.filter(project=project)
-                for pj_f in all_file:
-                    if pj_f.encryption == imgs.encryption:
-                        duplicated.append(imgs)
-                        break
                 imgs.save()
-                uploaded.append(imgs)
                 os.remove(png_name)    
             elif "3D" in project.task:
                 pass
-            
-            if len(duplicated) != 0:
-                for dup in duplicated:
-                    if "2D" in project.task:
-                        uploaded.remove(dup)
-                        dup.delete()
-
-            for upload in uploaded:
-                create_log(user=request.user,
-                   desc=f"{request.user.username} upload {upload.name}")
         return Response(
                 {
                     'message': 'Image uploaded',
