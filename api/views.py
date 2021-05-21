@@ -931,8 +931,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
         imgs.data = request.data['image']
-
-        imgs.encryption = hash_file(request.data['image'])
+        imgs.name = request.data['image'].name
+        imgs.status = 0
+        imgs.project = project
+        imgs.save()
+        
+        #check duplicate
+        imgs.encryption = hash_file(imgs.data.name)
         all_file = Image.objects.filter(project=project)
         for f in all_file:
             if f.encryption == imgs.encryption:
@@ -940,12 +945,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
-        imgs.name = request.data['image'].name
-        imgs.status = 0
-        imgs.project = project
         imgs.save()
-        
         create_log(user=request.user,
                    desc=f"{request.user.username} upload {imgs.name}")
         return Response(
@@ -985,7 +985,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.name = request.data['image'].name.split('.')[0]
         imgs.data = request.data['image']
 
-        imgs.encryption = hash_file(request.data['image'])
+        imgs.encryption = hash_file(request.data['image'].name)
         all_file = Image3D.objects.filter(project=project)
         for f in all_file:
             if f.encryption == imgs.encryption:
@@ -997,7 +997,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.status = 0
         imgs.project = project
         imgs.save()
-        
+
+
+        imgs.encryption = hash_file(imgs.data.name)
+        all_file = Image3D.objects.filter(project=project)
+        for f in all_file:
+            if f.encryption == imgs.encryption:
+                return  Response(
+                    {'message': 'A file already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        imgs.save()
         dcm_path = os.path.join("media","image3D",imgs.name,"dcm")
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
             zipObj.extractall(dcm_path)
