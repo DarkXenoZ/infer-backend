@@ -888,7 +888,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.save()
         os.remove(png_name)    
         create_log(user=request.user,
-                   desc=f"{request.user.username} upload {imgs['name']}")
+                   desc=f"{request.user.username} upload {imgs.name}")
         return Response(
                 {
                     'message': 'Image uploaded',
