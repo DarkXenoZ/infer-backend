@@ -138,7 +138,7 @@ class UtilViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['GET'], )    
     def list_local(self, request):
-        files_path = glob.glob("/data/*")
+        files_path = os.listdir("/data/")
         return Response(
             {
                 'files_path' : files_path
@@ -1028,15 +1028,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(project, request)
         except:
             return err_no_permission
-        response = check_arguments(request.data, ['files_path',])
+        response = check_arguments(request.data, ['files_name',])
         if response[0] != 0:
             return response[1]
-        files_path = request.data['files_path'].split(',')
+        files_name = request.data['files_name'].split(',')
         uploaded = []
         duplicated = []
-        for file_path in files_path:
+        for file_name in files_name:
             if "2D" in project.task: 
-                ds = pydicom.read_file(file_path)
+                ds = pydicom.read_file(os.path.join("/data",file_name))
                 imgs=Image()
                 imgs.patient_name = str(ds['PatientName'].value)
                 imgs.patient_id = str(ds['PatientID'].value)
@@ -1046,7 +1046,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 imgs.content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
                     
                 img = ds.pixel_array
-                name = file_path.split('/')[-1]
+                name = file_name
                 png_name = name.replace('.dcm','.png')
 
                 imgs.name=png_name
