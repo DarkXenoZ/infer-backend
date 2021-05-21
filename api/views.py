@@ -1069,8 +1069,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
                 {
                     'message': 'Image uploaded',
-                    'uploaded': [e.name for e in uploaded],
-                    'duplicated': [e.name for e in duplicated]
+                    'uploaded': uploaded,
+                    'duplicated': duplicated
                 },
                 status=status.HTTP_200_OK
             )
