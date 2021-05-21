@@ -871,9 +871,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.name=png_name
         imageio.imwrite(png_name, img)
             
-        with open(png_name,'rb') as f :
-            imgs.data = File(f)
-
+        f=open(png_name,'rb')
+        imgs.data = File(f)
+        f.close()
         imgs.encryption = hash_file(png_name)
         all_file = Image.objects.filter(project=project)
         for f in all_file:
