@@ -62,6 +62,7 @@ class Pipeline(models.Model):
 class Image(models.Model):
     name = models.CharField(max_length=100)
     data = models.FileField(upload_to='image/')
+    encryption = models.CharField(max_length=40)
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -85,6 +86,9 @@ class Image(models.Model):
     
     def __str__(self):
         return self.data.name
+    
+    class Meta:
+        unique_together = (('project','encryption'),)
 
 def content_file_name(instance, filename):
         return os.path.join("image3D",filename.split('.')[0],filename)
@@ -92,6 +96,7 @@ def content_file_name(instance, filename):
 class Image3D(models.Model):
     name = models.CharField(max_length=100)
     data = models.FileField(upload_to=content_file_name)
+    encryption = models.CharField(max_length=40)
     patient_name = models.CharField(max_length=50)
     patient_id = models.CharField(max_length=12)
     patient_age = models.IntegerField(validators=[MinValueValidator(0), ])
@@ -112,6 +117,9 @@ class Image3D(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        unique_together = (('project','encryption'),)
 
 
 class PredictResult(models.Model):
