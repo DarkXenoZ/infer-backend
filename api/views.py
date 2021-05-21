@@ -857,43 +857,36 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return err_invalid_input
         
         ds = pydicom.read_file(request.data['dicom'])
-        imgs={}
-        imgs['patient_name']= str(ds['PatientName'].value)
-        imgs['patient_id'] = str(ds['PatientID'].value)
-        imgs['physician_name'] = str(ds['ReferringPhysicianName'].value)
+        imgs=Image()
+        imgs.patient_name = str(ds['PatientName'].value)
+        imgs.patient_id = str(ds['PatientID'].value)
+        imgs.physician_name = str(ds['ReferringPhysicianName'].value)
         birth = int((ds['PatientBirthDate'].value)[:4])
-        imgs['patient_age'] = datetime.now().year - birth
-        imgs['content_date'] = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
+        imgs.patient_age = datetime.now().year - birth
+        imgs.content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
             
         img = ds.pixel_array
 
         png_name = request.data['dicom'].name.replace('.dcm','.png')
-        imgs['name']=png_name
+        imgs.name=png_name
         imageio.imwrite(png_name, img)
             
         with open(png_name,'rb') as f :
-            imgs['data'] = File(f)
+            imgs.data = File(f)
 
-        imgs['encryption'] = hash_file(png_name)
+        imgs.encryption = hash_file(png_name)
         all_file = Image.objects.filter(project=project)
         for f in all_file:
-            if f.encryption == imgs['encryption']:
+            if f.encryption == imgs.encryption:
                 return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
-        imgs['status'] = 0
-        imgs['project'] = project.pk
-        img_serializer = UploadImageSerializer(data=imgs)
-        if img_serializer.is_valid():
-            img_serializer.save()
-            f.close()
-            os.remove(png_name)    
-        else:
-            f.close()
-            os.remove(png_name)
-            return Response({'message':img_serializer.errors},) 
+        
+        imgs.status = 0
+        imgs.project = project.pk
+        imgs.save()
+        os.remove(png_name)    
         create_log(user=request.user,
                    desc=f"{request.user.username} upload {imgs['name']}")
         return Response(
