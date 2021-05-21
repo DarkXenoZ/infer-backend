@@ -884,7 +884,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 )
         
         imgs.status = 0
-        imgs.project = project.pk
+        imgs.project = project
         imgs.save()
         os.remove(png_name)    
         create_log(user=request.user,
