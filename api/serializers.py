@@ -104,11 +104,11 @@ class UserProjectSerializer(serializers.ModelSerializer):
 class UploadImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ("project","name","data","patient_name","patient_id","patient_age","content_date","physician_name","status")
+        fields = ("project","name","data","encryption","patient_name","patient_id","patient_age","content_date","physician_name","status")
 class UploadImage3DSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image3D
-        fields = ("project","name","data","patient_name","patient_id","patient_age","content_date","physician_name","status")
+        fields = ("project","name","data","encryption","patient_name","patient_id","patient_age","content_date","physician_name","status")
 
 class ImageProjectSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
