@@ -135,6 +135,16 @@ class UtilViewSet(viewsets.ViewSet):
             },
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=False, methods=['GET'], )    
+    def list_local(self, request):
+        files_path = os.listdir("/data/")
+        return Response(
+            {
+                'files_path' : files_path
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -881,6 +891,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         all_file = Image.objects.filter(project=project)
         for pj_f in all_file:
             if pj_f.encryption == imgs.encryption:
+                imgs.delete()
                 return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -888,7 +899,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.save()
         os.remove(png_name)    
         create_log(user=request.user,
-                   desc=f"{request.user.username} upload {imgs.name}")
+                   desc=f"{request.user.username} upload {imgs}")
         return Response(
                 {
                     'message': 'Image uploaded',
@@ -934,6 +945,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         all_file = Image.objects.filter(project=project)
         for f in all_file:
             if f.encryption == imgs.encryption:
+                imgs.delete()
                 return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -988,6 +1000,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         all_file = Image3D.objects.filter(project=project)
         for f in all_file:
             if f.encryption == imgs.encryption:
+                imgs.delete()
                 return  Response(
                     {'message': 'A file already exists'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -996,14 +1009,85 @@ class ProjectViewSet(viewsets.ModelViewSet):
         dcm_path = os.path.join("media","image3D",imgs.name,"dcm")
         with ZipFile("media/"+imgs.data.name, 'r') as zipObj:
             zipObj.extractall(dcm_path)
-        
+        create_log(user=request.user,
+                   desc=f"{request.user.username} upload {imgs.name}")
         return Response(
                 {
                     'message': 'Image uploaded',
                 },
                 status=status.HTTP_200_OK
             )
-   
+    
+    @action (detail=True, methods=['POST'],)
+    def upload_local(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        try:
+            user = check_staff_permission(project, request)
+        except:
+            return err_no_permission
+        response = check_arguments(request.data, ['files_name',])
+        if response[0] != 0:
+            return response[1]
+        files_name = request.data['files_name'].split(',')
+        uploaded = []
+        duplicated = []
+        for file_name in files_name:
+            if "2D" in project.task: 
+                ds = pydicom.read_file(os.path.join("/data",file_name))
+                imgs=Image()
+                imgs.patient_name = str(ds['PatientName'].value)
+                imgs.patient_id = str(ds['PatientID'].value)
+                imgs.physician_name = str(ds['ReferringPhysicianName'].value)
+                birth = int((ds['PatientBirthDate'].value)[:4])
+                imgs.patient_age = datetime.now().year - birth
+                imgs.content_date = datetime.strptime(ds['ContentDate'].value,"%Y%m%d").date()
+                    
+                img = ds.pixel_array
+                name = file_name
+                png_name = name.replace('.dcm','.png')
+
+                imgs.name=png_name
+                imageio.imwrite(png_name, img)
+                    
+                f=open(png_name,'rb')
+                imgs.data = File(f)
+                imgs.status = 0
+                imgs.project = project
+                imgs.save()
+                f.close()
+                imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
+                all_file = Image.objects.filter(project=project)
+                for pj_f in all_file:
+                    if pj_f.encryption == imgs.encryption:
+                        duplicated.append(imgs)
+                        break
+                imgs.save()
+                uploaded.append(imgs)
+                os.remove(png_name)    
+            elif "3D" in project.task:
+                pass
+            
+            if len(duplicated) != 0:
+                for dup in duplicated:
+                    if "2D" in project.task:
+                        uploaded.remove(dup)
+                        dup.delete()
+
+            for upload in uploaded:
+                create_log(user=request.user,
+                   desc=f"{request.user.username} upload {upload.name}")
+        return Response(
+                {
+                    'message': 'Image uploaded',
+                    'uploaded': [e.name for e in uploaded],
+                    'duplicated': [e.name for e in duplicated]
+                },
+                status=status.HTTP_200_OK
+            )
+
     @action (detail=True, methods=['POST'],)
     def infer_image(self, request, pk=None):
         try:
