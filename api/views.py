@@ -1034,7 +1034,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         duplicated = []
         for file_name in files_name:
             if "2D" in project.task: 
-                ds = pydicom.read_file(os.path.join("/data",file_name))
+                ds = pydicom.read_file(os.path.join("/backend","data",file_name))
                 imgs=Image()
                 imgs.patient_name = str(ds['PatientName'].value)
                 imgs.patient_id = str(ds['PatientID'].value)
