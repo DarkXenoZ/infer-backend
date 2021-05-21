@@ -26,6 +26,7 @@ import psutil
 # Create your views here.
 from django.http import HttpResponse
 import nrrd
+import hashlib
 
 err_invalid_input = Response(
     {'message': 'please recheck input fields'},
@@ -68,6 +69,26 @@ def check_arguments(request_arr, args):
 
 def check_staff_permission(project, request):
     return request.user if request.user.is_staff else project.users.get(username=request.user.username)
+
+def hash_file(filename):
+   """"This function returns the SHA-1 hash
+   of the file passed into it"""
+
+   # make a hash object
+   h = hashlib.sha1()
+
+   # open file for reading in binary mode
+   with open(filename,'rb') as file:
+
+       # loop till the end of the file
+       chunk = 0
+       while chunk != b'':
+           # read only 1024 bytes at a time
+           chunk = file.read(1024)
+           h.update(chunk)
+
+   # return the hex representation of digest
+   return h.hexdigest()
 
 class UtilViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['GET'], )    
@@ -850,8 +871,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs['name']=png_name
         imageio.imwrite(png_name, img)
             
-        f= open(png_name,'rb')
-        imgs['data'] = File(f)
+        with open(png_name,'rb') as f :
+            imgs['data'] = File(f)
+
+        imgs['encryption'] = hash_file(png_name)
+        all_file = Image.objects.filter(project=project)
+        for f in all_file:
+            if f.encryption == imgs['encryption']:
+                return  Response(
+                    {'message': 'A file already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         imgs['status'] = 0
         imgs['project'] = project.pk
         img_serializer = UploadImageSerializer(data=imgs)
@@ -900,6 +931,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.patient_age =  request.data['patient_age']
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
         imgs.data = request.data['image']
+
+        imgs.encryption = hash_file(request.data['image'])
+        all_file = Image.objects.filter(project=project)
+        for f in all_file:
+            if f.encryption == imgs.encryption:
+                return  Response(
+                    {'message': 'A file already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         imgs.name = request.data['image'].name
         imgs.status = 0
         imgs.project = project
@@ -913,7 +954,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK
             )
-    ###
+    
     @action (detail=True, methods=['POST'],)
     def upload_image3D(self, request, pk=None):
         try:
@@ -943,6 +984,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         imgs.content_date = datetime.strptime( request.data['content_date'],"%Y%m%d").date()
         imgs.name = request.data['image'].name.split('.')[0]
         imgs.data = request.data['image']
+
+        imgs.encryption = hash_file(request.data['image'])
+        all_file = Image3D.objects.filter(project=project)
+        for f in all_file:
+            if f.encryption == imgs.encryption:
+                return  Response(
+                    {'message': 'A file already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         imgs.status = 0
         imgs.project = project
         imgs.save()
