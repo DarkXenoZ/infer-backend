@@ -873,11 +873,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             
         f=open(png_name,'rb')
         imgs.data = File(f)
-        f.close()
         imgs.status = 0
         imgs.project = project
         imgs.save()
-
+        f.close()
         imgs.encryption = hash_file(os.path.join("media",imgs.data.name))
         all_file = Image.objects.filter(project=project)
         for pj_f in all_file:
