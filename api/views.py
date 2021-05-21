@@ -1026,7 +1026,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response = check_arguments(request.data, ['files_name',])
         if response[0] != 0:
             return response[1]
-        files_name = request.data['files_name'].split(',')
+        files_name = request.data['files_name']
         uploaded = []
         duplicated = []
         for file_name in files_name:
