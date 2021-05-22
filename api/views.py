@@ -1357,7 +1357,25 @@ class ImageViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         
-        image.actual_mask = request.data['actual_mask']
+        readdata, header = nrrd.read(request.data['actual_mask'])
+        if len(readdata)==4 :
+            readdata = readdata.swapaxes(1, 2)
+            mask_size = header['sizes'][1:3]
+        else:
+            readdata = readdata.swapaxes(0, 1)
+            mask_size = header['sizes'][0:2]
+        mask_size =mask_size[::-1]
+        space_origin = header['space origin'][:2].astype('int')
+        i = 0 # class should be 1 but in demo model use 0
+        mask = np.zeros(mask_size)
+        if len(readdata) == 4:
+            mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata[i], size)
+        else:
+            mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata == i, size)
+        file_path = f"tmp2d/mask.png"
+        imageio.imwrite(filepath,mask)
+        image.actual_mask = File(open(filepath,'rb'))
+        os.remove(filepath)
         image.status = 3
         image.note = request.data['note']
         image.timestamp = datetime.now()
