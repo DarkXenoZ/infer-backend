@@ -1369,7 +1369,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             mask_size = header['sizes'][0:2]
         mask_size =mask_size[::-1]
         space_origin = header['space origin'][:2].astype('int')
-        i = 0 # class should be 1 but in demo model use 0
+        i = 1 # class should be 1 but in demo model use 0 
         mask = np.zeros(mask_size)
         if len(readdata) == 4:
             mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata[i], mask_size)
