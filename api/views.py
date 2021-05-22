@@ -1106,7 +1106,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 else:
                     image = Image3D.objects.get(id=img)
                     images.append((image.name,image))
-                image.status = max(1, img.status)
+                image.status = max(1, image.status)
                 image.save()
             except:
                 return not_found(f'Image (id:{img})')
