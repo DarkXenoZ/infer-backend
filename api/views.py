@@ -1357,7 +1357,10 @@ class ImageViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         
-        readdata, header = nrrd.read(request.data['actual_mask'])
+        image.actual_mask = request.data['actual_mask']
+        image.save()
+        
+        readdata, header = nrrd.read(image.actual_mask)
         if len(readdata)==4 :
             readdata = readdata.swapaxes(1, 2)
             mask_size = header['sizes'][1:3]
