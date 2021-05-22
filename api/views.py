@@ -1369,12 +1369,13 @@ class ImageViewSet(viewsets.ModelViewSet):
             mask_size = header['sizes'][0:2]
         mask_size =mask_size[::-1]
         space_origin = header['space origin'][:2].astype('int')
-        i = 1 # class should be 1 but in demo model use 0 
+        i = 0 # class should be 1 but in demo model use 0 
         mask = np.zeros(mask_size)
         if len(readdata) == 4:
             mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata[i], mask_size)
         else:
             mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata == i, mask_size)
+        mask = (1- mask)*255 # in demo it must invert 0 1 and *255 for 8bit 
         filepath = f"tmp2d/mask.png"
         imageio.imwrite(filepath,mask)
         image.actual_mask = File(open(filepath,'rb'))
