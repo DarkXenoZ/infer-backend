@@ -139,5 +139,6 @@ def export(self, request, pk=None):
 @shared_task
 def test(user):
     print("-----------------------------------start 1 ---------------------------")
+    user = User.objects.get(username=username)
     create_log(user=user, desc="test")
     print("-----------------------------------end 1 ---------------------------")

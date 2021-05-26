@@ -94,7 +94,7 @@ class UtilViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['GET'], )    
     def test_task(self, request):
-        test.delay(request.user)
+        test.delay(request.user.username)
         return Response(
             {
                 'test' : "test"
