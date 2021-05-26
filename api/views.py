@@ -1419,7 +1419,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         else:
             mask[space_origin[0]:space_origin[0]+mask_size[0], space_origin[1]:space_origin[1]+mask_size[1]] = np.reshape(readdata == i, mask_size)
         mask = (1- mask)*255 # in demo it must invert 0 1 and *255 for 8bit 
-        filepath = f"tmp2d/mask.png"
+        filepath = f"{image.name.split('.')[0]}.png"
         imageio.imwrite(filepath,mask)
         image.actual_mask = File(open(filepath,'rb'))
         os.remove(filepath)
