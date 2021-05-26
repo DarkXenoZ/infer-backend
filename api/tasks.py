@@ -164,14 +164,13 @@ def export(project):
             pipelines = Pipeline.objects.filter(project=project)
             for pipeline in pipelines:
                 predResults = PredictResult.objects.filter(pipeline=pipeline)
-                for predResult in predResults:
-                    os.makedirs(os.path.join(zip_path,"Gradcam",predResult.name), exist_ok=True)
+                os.makedirs(os.path.join(zip_path,"Gradcam",pipeline.name), exist_ok=True)
                 for predResult in predResults:
                     grads = Gradcam.objects.filter(predictresult=predResult)
                     for grad in grads:
                         shutil.copyfile(
                             os.path.join(media_path,grad.Gradcam.name),
-                            os.path.join(zip_path,"Gradcam",os.path.basename(grad.Gradcam.name))
+                            os.path.join(zip_path,"Gradcam",pipeline.name,os.path.basename(grad.Gradcam.name))
                             )
 
     elif "Segmentation" in project.task:
