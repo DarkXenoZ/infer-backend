@@ -137,8 +137,25 @@ class UtilViewSet(viewsets.ViewSet):
         )
     
     @action(detail=False, methods=['GET'], )    
-    def list_local(self, request):
-        files_name = os.listdir("/backend/data/")
+    def list_local_dir(self, request):
+        files_path = "/backend/data/"
+        dir_name = os.listdir(files_path)
+        dir_name = [os.path.isdir(os.path.join(files_path,path)) for path in dir_name]
+        return Response(
+            {
+                'files_name' : files_name
+            },
+            status=status.HTTP_200_OK
+        )
+    @action(detail=False, methods=['GET'], )    
+    def list_local_files(self, request):
+        files_path = "/backend/data/"
+        try:
+            files_path = files_path + request.data['directory']
+        except:
+            pass
+        files_name = os.listdir(files_path)
+        files_name = [os.path.isfile(os.path.join(files_path,path)) for path in files_name]
         return Response(
             {
                 'files_name' : files_name
