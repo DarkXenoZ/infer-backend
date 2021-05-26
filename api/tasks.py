@@ -78,8 +78,8 @@ def infer_image(project,pipeline,image,user):
     util_module = importlib.import_module(util_module_name)
     netInputname = util_module.netInputname
     netOutputname = util_module.netOutputname
-    
-    preprocessImage = preprocessModule.preprocess(image[0])
+
+    preprocessImage = preprocessModule.preprocess(os.path.join('/backend/media',image.data.name))
     netInput = grpcclient.InferInput(netInputname, preprocessImage.shape, "FP32")
     netOutputList = []
     for outputName in netOutputname:
@@ -132,14 +132,21 @@ def infer_image(project,pipeline,image,user):
 @shared_task
 def export(self, request, pk=None):
     os.makedirs("tmpZipfile", exist_ok=True)
-    files_path = "/backend/tmpZipfile"
+    zip_path = "/backend/tmpZipfile"
+    media_path = "/backend/media"
     if "2D" in project.task:
-        image = Image.objects.filter(project=project)
+        images = Image.objects.filter(project=project,status__gte=3)
     else:
-        image = Image3D.objects.filter(project=project)
+        images = Image3D.objects.filter(project=project,status__gte=3)
     if "Classification" in project.task:
-        os.makedirs(os.path.join(files_path,"Images"), exist_ok=True)
-        
+        os.makedirs(os.path.join(zip_path,"Images"), exist_ok=True)
+        files_path = []
+        label =[]
+        for image in images:
+            files_path.append(os.path.join(media_path,image.data))
+            if image.status == 3:
+                pass
+
 
     
     
