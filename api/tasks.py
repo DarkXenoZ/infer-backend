@@ -62,7 +62,7 @@ def make_gradcam(
 
 
 @shared_task
-def infer_image(project,pipeline,image,user):
+def infer_image(project,pipeline,image,user,url):
     project = Project.objects.get(id=project)
     pipeline = Pipeline.objects.get(id=pipeline)
     if "2D" in project.task:
@@ -70,7 +70,6 @@ def infer_image(project,pipeline,image,user):
     else:
         image = Image3D.objects.get(id=image)
     user = User.objects.get(username=user)
-    url = os.getenv('TRTIS_URL')
     tritonClient = grpcclient.InferenceServerClient(url=url)
     preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
     preprocessModule = importlib.import_module(preprocess_module_name)
@@ -145,8 +144,9 @@ def export(self, request, pk=None):
         for image in images:
             files_path.append(os.path.join(media_path,image.data))
             if image.status == 3:
+                label.append((image.data.name,))
+            else:
                 pass
-
 
     
     

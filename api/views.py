@@ -1176,7 +1176,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     result = PredictResult.objects.create(pipeline=pipeline,image3d=img)
                 q.save()
                 result.save()
-                infer_image.delay(project.id,pipeline.id,img.id,user.username)
+                url = os.getenv('TRTIS_URL')
+                infer_image.delay(project.id,pipeline.id,img.id,user.username,url)
         create_log(
             user=user,
             desc=f"{user.username} infer image id  {image_ids}"
