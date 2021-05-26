@@ -818,7 +818,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             img.save()
                             results_path = os.path.join("media","image3D",q.image3D.name,"results")
                             maskname = img.name+".zip"
-                            with ZipFile(os.path.join(maskname), 'w') as zipObj:
+                            with ZipFile(maskname, 'w') as zipObj:
                                 for folderName, subfolders, filenames in os.walk(results_path):
                                     for filename in filenames:
                                         filePath = os.path.join(folderName, filename)
