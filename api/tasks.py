@@ -186,7 +186,7 @@ def export(project):
             else:
                 shutil.copyfile(
                 os.path.join(media_path,image.actual_mask.name),
-                os.path.join(zip_path,"Images",os.path.basename(image.actual_mask.name))
+                os.path.join(zip_path,"Mask",os.path.basename(image.actual_mask.name))
                 )
                 labels.append((os.path.basename(image.data.name),os.path.basename(image.actual_mask.name)))
         # make csv
