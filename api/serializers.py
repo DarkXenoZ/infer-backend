@@ -159,3 +159,8 @@ class ProjectImage3DSerializer(serializers.ModelSerializer):
             "predclass","timestamp","project_name",
             "project_task","project_predclasses"
             )
+
+class ExportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Export
+        fields = ("id","timestamp","project","zip_file")

@@ -212,4 +212,15 @@ class Log(models.Model):
         except:
             return '<Deleted>: %s' % (self.desc,)
 
-
+class Export(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True, )
+    zip_file = models.FileField(upload_to='export/',null=True,blank=True)
+    project = models.ForeignKey(
+        Project,
+        related_name='export',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    class Meta:
+        unique_together = ('project')
+    
