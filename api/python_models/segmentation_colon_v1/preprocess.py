@@ -18,7 +18,7 @@ def get_preprocessing_segment_colon(image):
     return preprocessImage
 
 def preprocess(Input):
-    Input = cv2.imread(f"media/{Input}")
+    Input = cv2.imread(Input)
     Input = get_preprocessing_segment_colon(Input)
 
     return Input

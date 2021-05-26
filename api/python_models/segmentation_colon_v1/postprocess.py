@@ -7,7 +7,7 @@ def postprocess(triton_output,image):
     results = (1- results)*255
     os.makedirs("media/mask", exist_ok=True)
 
-    filepath = image[0].split('/')[-1]
+    filepath = image.data.name.split('/')[-1]
     imageio.imwrite(filepath,results)
     
     return filepath

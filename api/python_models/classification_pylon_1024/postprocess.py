@@ -131,14 +131,14 @@ def postprocess(triton_output, image):
                 selected_class.append(class_idx)
                 if len(selected_class)==5: break
 
-    original_image = cv2.imread(os.path.join('/backend/media',image[0]), cv2.IMREAD_GRAYSCALE)
+    original_image = cv2.imread(os.path.join('/backend/media',image.data.name), cv2.IMREAD_GRAYSCALE)
     gradcam_dict = {}
     for class_idx in selected_class:
         class_name = CATEGORIES[class_idx]
         selected_heatmap = heatmap_output[class_idx]
         selected_heatmap = np.maximum(selected_heatmap, 0) / np.max(selected_heatmap)
         superimposed_img = blend(original_image, selected_heatmap)
-        filename = image[0].split('/')[-1]
+        filename = image.data.name.split('/')[-1]
         grad_filename = filename[:filename.rfind('.')]+'_'+class_name+'.png'
         superimposed_img.save(os.path.join('imagegrad_tmp', grad_filename))
         gradcam_dict[class_name] = os.path.join('imagegrad_tmp', grad_filename)
