@@ -775,19 +775,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                     predResult.save()
                             os.remove(file_path)
                             try:
-                                img_io = io.BytesIO()
                                 image_path = q.image.data.name
-                                img_grad = make_gradcam(pipeline=q.pipeline, img_path=image_path)
-                                img_grad.save(img_io, format='PNG')
-                                grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
-                                gradcam = Gradcam.objects.create(gradcam=grad,predictresult=predResult,predclass=q.image.predclass)
-                                gradcam.save()
+                                img_grad = make_gradcam.delay(queue=q.id, predictResult=predResult, img_path=image_path)
                             except:
                                 create_log(
                                     user=user,
                                     desc=f"{user.username} is unable to create Grad-CAM for image {q.image.data.name} on {q.pipeline.clara_pipeline_name} pipeline"
                                 )    
                             q.delete()  
+                        else:
+                            break
                     elif project.task == "3D Classification":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             output = subprocess.check_output(
@@ -815,6 +812,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                     predResult.save()
                                 os.remove(file_path)
                             q.delete() 
+                        else:
+                            break
                     elif project.task == "3D Segmentation":
                         if ("_HEALTHY" in hstatus )and("STOPPED" in state):
                             os.makedirs(f"media/image3D/{q.image3D.name}/results/", exist_ok=True)
@@ -842,6 +841,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             os.remove(maskname)
                             shutil.rmtree(results_path)
                             q.delete()
+                        else:
+                            break
                     
         except:
             pass
@@ -1135,10 +1136,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             try:
                 if "2D" in project.task:
                     image = Image.objects.get(id=img)
-                    images.append((image.data.name,image))
+                    images.append(image)
                 else:
                     image = Image3D.objects.get(id=img)
-                    images.append((image.name,image))
+                    images.append(image)
                 image.status = max(1, image.status)
                 image.save()
             except:
@@ -1147,9 +1148,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             file_path = os.path.join("media","")
             for img in images:
                 if "2D" in project.task:
-                    filename = os.path.join(file_path,img[0])
+                    filename = os.path.join(file_path,img.data.name)
                 else:
-                    filename = file_path+"image3D/"+img[0]+"/dcm/"
+                    filename = os.path.join(file_path,"image3D",img.name,"dcm/")
                 output1 = subprocess.check_output(
                     f"/root/claracli/clara create job -n {user.username} {project.name} -p {pipeline.pipeline_id} -f {filename} ", 
                     shell=True, 
@@ -1164,11 +1165,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 )
                 try:
                     if "2D" in project.task:
-                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img[1])
-                        result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image=img)
+                        result = PredictResult.objects.create(pipeline=pipeline,image=img)
                     else:
-                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img[1])
-                        result = PredictResult.objects.create(pipeline=pipeline,image3D=img[1])
+                        q = Queue.objects.create(job=job,project=project,pipeline=pipeline,image3D=img)
+                        result = PredictResult.objects.create(pipeline=pipeline,image3D=img)
                     q.save()
                     result.save()
                 except:
@@ -1180,14 +1181,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         else:
             for img in images:
                 if "2D" in project.task:
-                    q = Queue.objects.create(project=project,pipeline=pipeline,image=img[1])
-                    result = PredictResult.objects.create(pipeline=pipeline,image=img[1])
+                    q = Queue.objects.create(project=project,pipeline=pipeline,image=img)
+                    result = PredictResult.objects.create(pipeline=pipeline,image=img)
                 else:
-                    q = Queue.objects.create(project=project,pipeline=pipeline,image3d=img[1])
-                    result = PredictResult.objects.create(pipeline=pipeline,image3d=img[1])
+                    q = Queue.objects.create(project=project,pipeline=pipeline,image3d=img)
+                    result = PredictResult.objects.create(pipeline=pipeline,image3d=img)
                 q.save()
                 result.save()
-                infer_image(project,pipeline,img,user)
+                infer_image(project.id,pipeline.id,img.id,user.username)
         create_log(
             user=user,
             desc=f"{user.username} infer image id  {image_ids}"
