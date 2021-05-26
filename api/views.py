@@ -1199,7 +1199,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user = check_staff_permission(project, request)
         except:
             return err_no_permission
-        export_file.delay(project)
+        export.delay(project)
         create_log(
             user=user,
             desc=f"{request.user.username}  export project {project.name}"
