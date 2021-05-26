@@ -92,15 +92,6 @@ def hash_file(filename):
 
 class UtilViewSet(viewsets.ViewSet):
 
-    @action(detail=False, methods=['GET'], )    
-    def test_task(self, request):
-        test.delay(request.user.username)
-        return Response(
-            {
-                'test' : "test"
-            },
-            status=status.HTTP_200_OK
-        )
 
     @action(detail=False, methods=['GET'], )    
     def check_usage(self, request):
@@ -409,9 +400,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                         diag_list[diag] = 1
                     else:
                         diag_list[diag]+= 1
-        total = sum(diag_list.values())
-        for i in diag_list: 
-            diag_list[i] = diag_list[i]/total
         pipelines = Pipeline.objects.filter(project=project)
         fstatus = {'uploaded' : status_count[0],
                 'in process': status_count[1],
@@ -1188,7 +1176,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     result = PredictResult.objects.create(pipeline=pipeline,image3d=img)
                 q.save()
                 result.save()
-                infer_image(project.id,pipeline.id,img.id,user.username)
+                infer_image.delay(project.id,pipeline.id,img.id,user.username)
         create_log(
             user=user,
             desc=f"{user.username} infer image id  {image_ids}"
