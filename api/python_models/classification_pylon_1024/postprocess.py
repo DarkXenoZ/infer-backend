@@ -140,7 +140,7 @@ def postprocess(triton_output, image):
         superimposed_img = blend(original_image, selected_heatmap)
         filename = image.data.name.split('/')[-1]
         grad_filename = filename[:filename.rfind('.')]+'_'+class_name+'.png'
-        superimposed_img.save(os.path.join('imagegrad_tmp', grad_filename))
-        gradcam_dict[class_name] = os.path.join('imagegrad_tmp', grad_filename)
+        superimposed_img.save(grad_filename)
+        gradcam_dict[class_name] =grad_filename
 
     return [normalized_probs, gradcam_dict]
