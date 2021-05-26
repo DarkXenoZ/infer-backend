@@ -91,6 +91,17 @@ def hash_file(filename):
    return h.hexdigest()
 
 class UtilViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['GET'], )    
+    def test_task(self, request):
+        test.delay(request.user)
+        return Response(
+            {
+                'test' : "test"
+            },
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=False, methods=['GET'], )    
     def check_usage(self, request):
         nvmlInit()
@@ -1187,6 +1198,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+    
+    @action (detail=True, methods=['POST'],)
+    def export(self, request, pk=None):
+        try:
+            project = Project.objects.get(id=pk)
+        except:
+            return not_found('Project')
+        try:
+            user = check_staff_permission(project, request)
+        except:
+            return err_no_permission
+        export_file(project)
+
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer

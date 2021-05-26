@@ -22,16 +22,8 @@ import importlib
 from .gradcam import GradcamModel
 import json
 
-
-
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
-
-def not_found(Object):
-    return Response(
-        {'message': f'{Object} not found'},
-        status=status.HTTP_404_NOT_FOUND,
-    )
 
 @shared_task
 def make_gradcam(
@@ -123,11 +115,29 @@ def infer_image(project,pipeline,image,user):
     else:
         q = Queue.objects.get(project=project,pipeline=pipeline,image3d=image[1])
     q.delete()
-    create_log(user=user,
-                desc=f"{user.username} infer image id  {image[1].id}")
-    return Response(
-        {
-            'message': 'Completed',
-        },
-        status=status.HTTP_200_OK
-    )
+
+@shared_task
+def export(self, request, pk=None):
+    os.makedirs("tmpZipfile", exist_ok=True)
+    files_path = "/backend/tmpZipfile"
+    if "2D" in project.task:
+        image = Image.objects.filter(project=project)
+    else:
+        image = Image3D.objects.filter(project=project)
+    if "Classification" in project.task:
+        os.makedirs(os.path.join(files_path,"Images"), exist_ok=True)
+        
+
+    
+    
+    
+    try:
+        pipeline = Pipeline.objects.get(id=request.data['pipeline'])
+    except:
+        return not_found('Pipeline')
+        
+@shared_task
+def test(user):
+    print("-----------------------------------start 1 ---------------------------")
+    create_log(user=user, desc="test")
+    print("-----------------------------------end 1 ---------------------------")
