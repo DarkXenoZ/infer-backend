@@ -191,7 +191,7 @@ def export(project):
                 labels.append((os.path.basename(image.data.name),os.path.basename(image.actual_mask.name)))
         # make csv
         with open(os.path.join(zip_path,"label.csv"), 'w', newline='') as csvfile:
-            fieldnames = ['filename', 'class']
+            fieldnames = ['filename', 'mask']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for filename,mask in labels:
