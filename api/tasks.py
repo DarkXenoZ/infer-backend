@@ -21,6 +21,7 @@ from django.core.files import File
 import importlib
 from .gradcam import GradcamModel
 import json
+from zipfile import ZipFile
 
 def create_log(user, desc):
     Log.objects.create(user=user, desc=desc)
