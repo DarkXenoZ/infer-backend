@@ -89,7 +89,7 @@ def infer_image(project,pipeline,image,user,url):
     triton_output = []
     for i in range(len(netOutputname)):
         triton_output.append(Output.as_numpy(netOutputname[i]))
-    predResult = PredictResult.objects.get(pipeline=pipeline,image=image[1])
+    predResult = PredictResult.objects.get(pipeline=pipeline,image=image)
     postprocess_module_name = f'api.python_models.{pipeline.model_name}.postprocess'
     postprocessModule = importlib.import_module(postprocess_module_name)
 
