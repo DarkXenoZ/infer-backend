@@ -136,9 +136,9 @@ def export(project):
     media_path = "/backend/media"
     project = Project.objects.get(id=project)
     if "2D" in project.task:
-        images = Image.objects.filter(project=project,status__gte=3)
+        images = Image.objects.filter(project=project,status__gte=2)
     else:
-        images = Image3D.objects.filter(project=project,status__gte=3)
+        images = Image3D.objects.filter(project=project,status__gte=2)
     if "Classification" in project.task:
         os.makedirs(os.path.join(zip_path,"Images"), exist_ok=True)
         labels =[]
