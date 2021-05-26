@@ -140,10 +140,10 @@ class UtilViewSet(viewsets.ViewSet):
     def list_local_dir(self, request):
         files_path = "/backend/data/"
         dir_name = os.listdir(files_path)
-        dir_name = [os.path.isdir(os.path.join(files_path,path)) for path in dir_name]
+        dir_name = [path for path in dir_name if os.path.isdir(os.path.join(files_path,path)) ]
         return Response(
             {
-                'files_name' : files_name
+                'dir_name' : dir_name
             },
             status=status.HTTP_200_OK
         )
@@ -151,11 +151,11 @@ class UtilViewSet(viewsets.ViewSet):
     def list_local_files(self, request):
         files_path = "/backend/data/"
         try:
-            files_path = files_path + request.data['directory']
+            files_path = files_path + request.data['directory']+'/'
         except:
             pass
         files_name = os.listdir(files_path)
-        files_name = [os.path.isfile(os.path.join(files_path,path)) for path in files_name]
+        files_name = [path for path in files_name if os.path.isfile(os.path.join(files_path,path)) ]
         return Response(
             {
                 'files_name' : files_name
