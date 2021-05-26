@@ -1044,11 +1044,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if response[0] != 0:
             return response[1]
         files_name = request.data['files_name']
+        files_path = os.path.join("/backend","data")
+        try:
+            files_path = os.path.join(files_path,request.data['directory'])
+        except:
+            pass
         uploaded = []
         duplicated = []
         for file_name in files_name:
             if "2D" in project.task: 
-                ds = pydicom.read_file(os.path.join("/backend","data",file_name))
+                ds = pydicom.read_file(os.path.join(files_path,file_name))
                 imgs=Image()
                 imgs.patient_name = str(ds['PatientName'].value)
                 imgs.patient_id = str(ds['PatientID'].value)
@@ -1182,9 +1187,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-        
-
-
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
