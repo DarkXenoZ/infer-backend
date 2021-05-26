@@ -151,7 +151,7 @@ class UtilViewSet(viewsets.ViewSet):
     def list_local_files(self, request):
         files_path = "/backend/data/"
         try:
-            files_path = files_path + request.data['directory']+'/'
+            files_path = os.path.join(files_path,request.data['directory'])
         except:
             pass
         files_name = os.listdir(files_path)
