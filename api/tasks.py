@@ -27,9 +27,12 @@ def create_log(user, desc):
 
 @shared_task
 def make_gradcam(
-    pipeline,
+    queue,
+    predictResult,
     img_path
 ):  
+    queue = Queue.objects.get(id=queue)
+    pipeline = queue.pipeline
     try:
         img = PIL.Image.open(os.path.join('/backend/media',img_path))
         img = keras.preprocessing.image.img_to_array(img)
@@ -47,14 +50,26 @@ def make_gradcam(
         jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
         superimposed_img = jet_heatmap * 0.4 + img
         superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
-        return superimposed_img
+        
+        img_io = io.BytesIO()
+        superimposed_img.save(img_io, format='PNG')
+        grad = InMemoryUploadedFile(img_io, None, image_path, 'image/png', img_io.tell, charset=None)
+        gradcam = Gradcam.objects.create(gradcam=grad,predictresult=predictResult,predclass=queue.image.predclass)
+        gradcam.save()
     except Exception as e:
-        print('gradcam error:\n',str(e))
-        return None
+        error = 'gradcam error:\n'+str(e)
+        create_log(user=None, desc=error)
 
 
 @shared_task
 def infer_image(project,pipeline,image,user):
+    project = Project.objects.get(id=project)
+    pipeline = Pipeline.objects.get(id=pipeline)
+    if "2D" in project.task:
+        image = Image.objects.get(id=image)
+    else:
+        image = Image3D.objects.get(id=image)
+    user = User.objects.get(username=user)
     url = os.getenv('TRTIS_URL')
     tritonClient = grpcclient.InferenceServerClient(url=url)
     preprocess_module_name = f'api.python_models.{pipeline.model_name}.preprocess'
@@ -82,17 +97,15 @@ def infer_image(project,pipeline,image,user):
     result = postprocessModule.postprocess(triton_output,image)
     if "Classification" in project.task:
         if len(result[0]) != len(project.predclasses):
-            return Response(
-                {'message': 'Length of predclasses not equal to Length of result'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        label = dict(zip(project.predclasses,result[0]))
-        pred=json.dumps(label)
-        predResult.predicted_class = pred
-        predResult.save()
-        image[1].predclass = max(label,key=lambda k: label[k])
-        image[1].status = 2
-        image[1].save() 
+            create_log(user, desc='Length of predclasses not equal to Length of result')
+        else:
+            label = dict(zip(project.predclasses,result[0]))
+            pred=json.dumps(label)
+            predResult.predicted_class = pred
+            predResult.save()
+            image[1].predclass = max(label,key=lambda k: label[k])
+            image[1].status = 2
+            image[1].save() 
         if len(result) == 2 and project.task == "2D Classification":
             for classname,filepath in result[1].items():
                 grad = Gradcam()
@@ -136,9 +149,3 @@ def export(self, request, pk=None):
     except:
         return not_found('Pipeline')
         
-@shared_task
-def test(user):
-    print("-----------------------------------start 1 ---------------------------")
-    user = User.objects.get(username=user)
-    create_log(user=user, desc="test")
-    print("-----------------------------------end 1 ---------------------------")
