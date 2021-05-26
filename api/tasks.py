@@ -147,7 +147,7 @@ def export(project):
                 os.path.join(media_path,image.data.name),
                 os.path.join(zip_path,"Images",os.path.basename(image.data.name))
                 )
-            if image.status == 3:
+            if image.status == 2:
                 labels.append((os.path.basename(image.data.name),""))
             else:
                 labels.append((os.path.basename(image.data.name),image.actual_class))
@@ -185,7 +185,7 @@ def export(project):
                 os.path.join(media_path,image.actual_mask.name),
                 os.path.join(zip_path,"Images",os.path.basename(image.actual_mask.name))
                 )
-            if image.status == 3:
+            if image.status == 2:
                 labels.append((os.path.basename(image.data.name),""))
             else:
                 labels.append((os.path.basename(image.data.name),os.path.basename(image.actual_mask.name)))
@@ -202,7 +202,7 @@ def export(project):
         for folderName, subfolders, filenames in os.walk(zip_path):
             for filename in filenames:
                 filePath = os.path.join(folderName, filename)
-                zipObj.write(filePath, os.path.basename(filePath))
+                zipObj.write(filePath, filePath)
     # Save 
     try:
         export_file = Export.objects.get(project=project)
