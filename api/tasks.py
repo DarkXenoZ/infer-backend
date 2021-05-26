@@ -102,9 +102,9 @@ def infer_image(project,pipeline,image,user,url):
             pred=json.dumps(label)
             predResult.predicted_class = pred
             predResult.save()
-            image[1].predclass = max(label,key=lambda k: label[k])
-            image[1].status = 2
-            image[1].save() 
+            image.predclass = max(label,key=lambda k: label[k])
+            image.status = 2
+            image.save() 
         if len(result) == 2 and project.task == "2D Classification":
             for classname,filepath in result[1].items():
                 grad = Gradcam()
@@ -119,20 +119,21 @@ def infer_image(project,pipeline,image,user,url):
         mask.mask = File(open(result,'rb'))
         mask.save()
         os.remove(result)
-        image[1].status = 2
-        image[1].save()
+        image.status = 2
+        image.save()
     
     if "2D" in project.task:
-        q = Queue.objects.get(project=project,pipeline=pipeline,image=image[1])
+        q = Queue.objects.get(project=project,pipeline=pipeline,image=image)
     else:
-        q = Queue.objects.get(project=project,pipeline=pipeline,image3d=image[1])
+        q = Queue.objects.get(project=project,pipeline=pipeline,image3d=image)
     q.delete()
 
 @shared_task
-def export(self, request, pk=None):
+def export(project):
     os.makedirs("tmpZipfile", exist_ok=True)
     zip_path = "/backend/tmpZipfile"
     media_path = "/backend/media"
+    project = Project.objects.get(id=project)
     if "2D" in project.task:
         images = Image.objects.filter(project=project,status__gte=3)
     else:
@@ -146,7 +147,8 @@ def export(self, request, pk=None):
             if image.status == 3:
                 label.append((image.data.name,))
             else:
-                pass
+                label.append((image.data.name,image.actual_class))
+            predResult = PredictResult.objects.filter(image=image)
 
     
     
