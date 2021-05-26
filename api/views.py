@@ -1200,6 +1200,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except:
             return err_no_permission
         export_file(project)
+        create_log(
+            user=user,
+            desc=f"{request.user.username}  export project {project.name}"
+        )
+        return Response(
+            {
+                'message': 'Completed',
+            },
+            status=status.HTTP_200_OK
+        )
 
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
@@ -1624,7 +1634,7 @@ class PredictResultViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            result = Diag.objects.get(id=pk)
+            result = PredictResult.objects.get(id=pk)
         except:
             return not_found('PredictResult')
         if not request.user.is_staff and request.user not in result.pipeline.project.users:
@@ -1639,6 +1649,33 @@ class PredictResultViewSet(viewsets.ModelViewSet):
             return err_no_permission
         queryset = PredictResult.objects.all()
         serializer_class = PredictResultSerializer
+        return Response(serializer_class(queryset, many=True).data,
+                        status=status.HTTP_200_OK)
+    
+    def create(self, request, pk=None):
+       return err_not_allowed
+
+class ExportViewSet(viewsets.ModelViewSet):
+    queryset = Export.objects.all()
+    serializer_class = ExportSerializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            export = Export.objects.get(id=pk)
+        except:
+            return not_found('Export')
+        if not request.user.is_staff :
+            return err_no_permission
+
+        serializer_class = ExportSerializer
+        return Response(serializer_class(export, many=False).data,
+                        status=status.HTTP_200_OK, )       
+    
+    def list(self, request):
+        if not request.user.is_staff:
+            return err_no_permission
+        queryset = Export.objects.all()
+        serializer_class = ExportSerializer
         return Response(serializer_class(queryset, many=True).data,
                         status=status.HTTP_200_OK)
     
