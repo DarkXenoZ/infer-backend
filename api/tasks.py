@@ -169,8 +169,8 @@ def export(project):
                     grads = Gradcam.objects.filter(predictresult=predResult)
                     for grad in grads:
                         shutil.copyfile(
-                            os.path.join(media_path,grad.Gradcam.name),
-                            os.path.join(zip_path,"Gradcam",pipeline.name,os.path.basename(grad.Gradcam.name))
+                            os.path.join(media_path,grad.gradcam.name),
+                            os.path.join(zip_path,"Gradcam",pipeline.name,os.path.basename(grad.gradcam.name))
                             )
 
     elif "Segmentation" in project.task:
