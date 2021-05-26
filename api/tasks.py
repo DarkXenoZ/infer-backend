@@ -175,6 +175,7 @@ def export(project):
 
     elif "Segmentation" in project.task:
         os.makedirs(os.path.join(zip_path,"Images"), exist_ok=True)
+        os.makedirs(os.path.join(zip_path,"Mask"), exist_ok=True)
         labels =[]
         for image in images:
             shutil.copyfile(
