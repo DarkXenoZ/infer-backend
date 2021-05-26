@@ -145,12 +145,12 @@ def export(project):
         for image in images:
             shutil.copyfile(
                 os.path.join(media_path,image.data.name),
-                os.path.join(zip_path,"Images",os.basename(image.data.name))
+                os.path.join(zip_path,"Images",os.path.basename(image.data.name))
                 )
             if image.status == 3:
-                labels.append((os.basename(image.data.name),""))
+                labels.append((os.path.basename(image.data.name),""))
             else:
-                labels.append((os.basename(image.data.name),image.actual_class))
+                labels.append((os.path.basename(image.data.name),image.actual_class))
         # make csv
         with open(os.path.join(zip_path,"label.csv"), 'w', newline='') as csvfile:
             fieldnames = ['filename', 'class']
@@ -171,7 +171,7 @@ def export(project):
                     for grad in grads:
                         shutil.copyfile(
                             os.path.join(media_path,grad.Gradcam.name),
-                            os.path.join(zip_path,"Gradcam",os.basename(grad.Gradcam.name))
+                            os.path.join(zip_path,"Gradcam",os.path.basename(grad.Gradcam.name))
                             )
 
     elif "Segmentation" in project.task:
@@ -180,16 +180,16 @@ def export(project):
         for image in images:
             shutil.copyfile(
                 os.path.join(media_path,image.data.name),
-                os.path.join(zip_path,"Images",os.basename(image.data.name))
+                os.path.join(zip_path,"Images",os.path.basename(image.data.name))
                 )
             shutil.copyfile(
                 os.path.join(media_path,image.actual_mask.name),
-                os.path.join(zip_path,"Images",os.basename(image.actual_mask.name))
+                os.path.join(zip_path,"Images",os.path.basename(image.actual_mask.name))
                 )
             if image.status == 3:
-                labels.append((os.basename(image.data.name),""))
+                labels.append((os.path.basename(image.data.name),""))
             else:
-                labels.append((os.basename(image.data.name),os.basename(image.actual_mask.name)))
+                labels.append((os.path.basename(image.data.name),os.path.basename(image.actual_mask.name)))
         # make csv
         with open(os.path.join(zip_path,"label.csv"), 'w', newline='') as csvfile:
             fieldnames = ['filename', 'class']
