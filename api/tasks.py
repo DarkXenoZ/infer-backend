@@ -140,21 +140,80 @@ def export(project):
         images = Image3D.objects.filter(project=project,status__gte=3)
     if "Classification" in project.task:
         os.makedirs(os.path.join(zip_path,"Images"), exist_ok=True)
-        files_path = []
-        label =[]
+        labels =[]
         for image in images:
-            files_path.append(os.path.join(media_path,image.data))
+            shutil.copyfile(
+                os.path.join(media_path,image.data.name),
+                os.path.join(zip_path,"Images",os.basename(image.data.name))
+                )
             if image.status == 3:
-                label.append((image.data.name,))
+                labels.append((os.basename(image.data.name),""))
             else:
-                label.append((image.data.name,image.actual_class))
-            predResult = PredictResult.objects.filter(image=image)
+                labels.append((os.basename(image.data.name),image.actual_class))
+        # make csv
+        with open(os.path.join(zip_path,"label.csv"), 'w', newline='') as csvfile:
+            fieldnames = ['filename', 'class']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for filename,label in labels:
+                writer.writerow({'filename': filename, 'class': label})
+        # Gradcam
+        if "2D" in project.task:
+            os.makedirs(os.path.join(zip_path,"Gradcam"), exist_ok=True)
+            pipelines = Pipeline.objects.filter(project=project)
+            for pipeline in pipelines:
+                predResults = PredictResult.objects.filter(pipeline=pipeline)
+                for predResult in predResults:
+                    os.makedirs(os.path.join(zip_path,"Gradcam",predResult.name), exist_ok=True)
+                for predResult in predResults:
+                    grads = Gradcam.objects.filter(predictresult=predResult)
+                    for grad in grads:
+                        shutil.copyfile(
+                            os.path.join(media_path,grad.Gradcam.name),
+                            os.path.join(zip_path,"Gradcam",os.basename(grad.Gradcam.name))
+                            )
+
+    elif "Segmentation" in project.task:
+        os.makedirs(os.path.join(zip_path,"Images"), exist_ok=True)
+        labels =[]
+        for image in images:
+            shutil.copyfile(
+                os.path.join(media_path,image.data.name),
+                os.path.join(zip_path,"Images",os.basename(image.data.name))
+                )
+            shutil.copyfile(
+                os.path.join(media_path,image.actual_mask.name),
+                os.path.join(zip_path,"Images",os.basename(image.actual_mask.name))
+                )
+            if image.status == 3:
+                labels.append((os.basename(image.data.name),""))
+            else:
+                labels.append((os.basename(image.data.name),os.basename(image.actual_mask.name)))
+        # make csv
+        with open(os.path.join(zip_path,"label.csv"), 'w', newline='') as csvfile:
+            fieldnames = ['filename', 'class']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for filename,mask in labels:
+                writer.writerow({'filename': filename, 'mask': mask})
+    # zipfile
+    zip_name = f"{project.name}.zip"
+    with ZipFile(zip_name, 'w') as zipObj:
+        for folderName, subfolders, filenames in os.walk(zip_path):
+            for filename in filenames:
+                filePath = os.path.join(folderName, filename)
+                zipObj.write(filePath, os.path.basename(filePath))
+    # Save 
+    try:
+        export_file = Export.objects.get(project=project)
+    except:
+        export_file = Export()
+        export_file.project = project
+    export_file.zip_file = File(open(zip_name,'rb'))
+    export_file.save()
+
+    os.remove(zip_name)
+    shutil.rmtree(zip_path)
 
     
-    
-    
-    try:
-        pipeline = Pipeline.objects.get(id=request.data['pipeline'])
-    except:
-        return not_found('Pipeline')
         
