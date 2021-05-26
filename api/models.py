@@ -222,5 +222,5 @@ class Export(models.Model):
         on_delete=models.CASCADE,
     )
     class Meta:
-        unique_together = ('project')
+        unique_together = ('project',)
     
