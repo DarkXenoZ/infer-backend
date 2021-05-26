@@ -25,7 +25,7 @@ infer-backend is a backend server stack for the project using Django REST Framew
 	GET /api/util/check_server_status
 	POST /api/util/restart
 	GET	/api/util/list_local_dir
-	GET	/api/util/list_local_dir (directory:optional)
+	GET	/api/util/list_local_files (directory:optional)
 	GET	/api/log/
 	GET	/api/user/
 	POST	/api/user/		(username,password,first_name,last_name,email)
