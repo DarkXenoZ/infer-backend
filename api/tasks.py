@@ -202,7 +202,7 @@ def export(project):
         for folderName, subfolders, filenames in os.walk(zip_path):
             for filename in filenames:
                 filePath = os.path.join(folderName, filename)
-                zipObj.write(filePath, filePath.split('/')[2:])
+                zipObj.write(filePath, "/".join(filePath.split('/')[2:]))
     # Save 
     try:
         export_file = Export.objects.get(project=project)
