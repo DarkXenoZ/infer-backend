@@ -179,7 +179,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'first_name',
             'last_name',
             'email',
-            'admin'
+            'is_staff'
         ])
         if response[0] != 0:
             return response[1]
@@ -189,7 +189,7 @@ class UserViewSet(viewsets.ModelViewSet):
         first_name = request.data['first_name']
         last_name = request.data['last_name']
         email = request.data['email']
-        admin = request.data['admin'] == "true"
+        admin = request.data['is_staff'] == "true"
 
         try:
             User.objects.get(username=username)
@@ -253,7 +253,7 @@ class UserViewSet(viewsets.ModelViewSet):
             except:
                 pass
             try:
-                user.is_staff = request.data["admin"]=="true"
+                user.is_staff = request.data["is_staff"]=="true"
             except:
                 pass
             user.save()
