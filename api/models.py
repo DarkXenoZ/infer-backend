@@ -213,7 +213,7 @@ class Log(models.Model):
             return '<Deleted>: %s' % (self.desc,)
 
 class Export(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True, )
+    timestamp = models.DateTimeField(auto_now=True, )
     zip_file = models.FileField(upload_to='export/',null=True,blank=True)
     project = models.ForeignKey(
         Project,
