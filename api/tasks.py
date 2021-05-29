@@ -32,6 +32,8 @@ def make_gradcam(
     queue = Queue.objects.get(id=queue)
     predictResult = PredictResult.objects.get(id=predictResult)
     pipeline = queue.pipeline
+    predclass = queue.image.predclass
+    queue.delete()
     try:
         img = PIL.Image.open(os.path.join('/backend/media', img_path))
         img = keras.preprocessing.image.img_to_array(img)
@@ -57,7 +59,7 @@ def make_gradcam(
         grad = InMemoryUploadedFile(
             img_io, None, img_path, 'image/png', img_io.tell, charset=None)
         gradcam = Gradcam.objects.create(
-            gradcam=grad, predictresult=predictResult, predclass=queue.image.predclass)
+            gradcam=grad, predictresult=predictResult, predclass=predclass)
         gradcam.save()
     except Exception as e:
         error = 'gradcam error:\n'+str(e)

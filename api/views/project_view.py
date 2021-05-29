@@ -418,9 +418,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                             user=user,
                                             desc=f"{user.username} is unable to create Grad-CAM for image {q.image.data.name} on {q.pipeline.clara_pipeline_name} pipeline"
                                         )
-
                             os.remove(file_path)
-                            q.delete()
                         else:
                             break
                     elif project.task == "3D Classification":
