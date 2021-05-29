@@ -413,7 +413,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             try:
                                 image_path = q.image.data.name
                                 make_gradcam.delay(
-                                    queue=q.id, predictResult=predResult, img_path=image_path)
+                                    queue=q.id, predictResult=predResult.id, img_path=image_path)
                             except:
                                 create_log(
                                     user=user,
