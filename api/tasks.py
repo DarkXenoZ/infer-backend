@@ -34,12 +34,12 @@ def make_gradcam(
     pipeline = queue.pipeline
     predclass = queue.image.predclass
     queue.delete()
-    print(img_path)
-    img = PIL.Image.open(os.path.join('/backend/media', img_path))
+    img_path_concat = os.path.join('/backend/media', img_path)
+    img = PIL.Image.open(img_path_concat)
     img = keras.preprocessing.image.img_to_array(img)
     preprocess_module_name = f'api.python_models.{pipeline.clara_pipeline_name}.preprocess'
     preprocessModule = importlib.import_module(preprocess_module_name)
-    preprocessImage = preprocessModule.preprocess(img_path)
+    preprocessImage = preprocessModule.preprocess(img_path_concat)
     gradcam_model = GradcamModel(os.path.join(
         '/backend/api', 'python_models', pipeline.clara_pipeline_name, 'model.trt.pb'))
     heatmap = gradcam_model.gradcam(preprocessImage)
