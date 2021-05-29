@@ -33,6 +33,7 @@ def make_gradcam(
     predictResult = PredictResult.objects.get(id=predictResult)
     pipeline = queue.pipeline
     predclass = queue.image.predclass
+    print(pipeline, predclass)
     queue.delete()
     try:
         img = PIL.Image.open(os.path.join('/backend/media', img_path))

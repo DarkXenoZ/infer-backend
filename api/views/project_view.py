@@ -19,6 +19,7 @@ from datetime import datetime
 import imageio
 from django.core.files import File
 
+
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
