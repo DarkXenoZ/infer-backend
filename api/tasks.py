@@ -34,6 +34,7 @@ def make_gradcam(
     pipeline = queue.pipeline
     predclass = queue.image.predclass
     queue.delete()
+    print(img_path)
     img = PIL.Image.open(os.path.join('/backend/media', img_path))
     img = keras.preprocessing.image.img_to_array(img)
     preprocess_module_name = f'api.python_models.{pipeline.clara_pipeline_name}.preprocess'
