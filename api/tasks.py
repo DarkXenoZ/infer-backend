@@ -33,38 +33,33 @@ def make_gradcam(
     predictResult = PredictResult.objects.get(id=predictResult)
     pipeline = queue.pipeline
     predclass = queue.image.predclass
-    print(pipeline, predclass)
     queue.delete()
-    try:
-        img = PIL.Image.open(os.path.join('/backend/media', img_path))
-        img = keras.preprocessing.image.img_to_array(img)
-        preprocess_module_name = f'api.python_models.{pipeline.clara_pipeline_name}.preprocess'
-        preprocessModule = importlib.import_module(preprocess_module_name)
-        preprocessImage = preprocessModule.preprocess(img_path)
-        gradcam_model = GradcamModel(os.path.join(
-            '/backend/api', 'python_models', pipeline.clara_pipeline_name, 'model.trt.pb'))
-        heatmap = gradcam_model.gradcam(preprocessImage)
-        heatmap = np.uint8(255 * heatmap)
-        jet = cm.get_cmap("jet")
-        jet_colors = jet(np.arange(256))[:, :3]
-        jet_heatmap = jet_colors[heatmap]
-        jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
-        jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
-        jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
-        superimposed_img = jet_heatmap * 0.4 + img
-        superimposed_img = keras.preprocessing.image.array_to_img(
-            superimposed_img)
+    img = PIL.Image.open(os.path.join('/backend/media', img_path))
+    img = keras.preprocessing.image.img_to_array(img)
+    preprocess_module_name = f'api.python_models.{pipeline.clara_pipeline_name}.preprocess'
+    preprocessModule = importlib.import_module(preprocess_module_name)
+    preprocessImage = preprocessModule.preprocess(img_path)
+    gradcam_model = GradcamModel(os.path.join(
+        '/backend/api', 'python_models', pipeline.clara_pipeline_name, 'model.trt.pb'))
+    heatmap = gradcam_model.gradcam(preprocessImage)
+    heatmap = np.uint8(255 * heatmap)
+    jet = cm.get_cmap("jet")
+    jet_colors = jet(np.arange(256))[:, :3]
+    jet_heatmap = jet_colors[heatmap]
+    jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
+    jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
+    jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
+    superimposed_img = jet_heatmap * 0.4 + img
+    superimposed_img = keras.preprocessing.image.array_to_img(
+        superimposed_img)
 
-        img_io = io.BytesIO()
-        superimposed_img.save(img_io, format='PNG')
-        grad = InMemoryUploadedFile(
-            img_io, None, img_path, 'image/png', img_io.tell, charset=None)
-        gradcam = Gradcam.objects.create(
-            gradcam=grad, predictresult=predictResult, predclass=predclass)
-        gradcam.save()
-    except Exception as e:
-        error = 'gradcam error:\n'+str(e)
-        create_log(user=None, desc=error)
+    img_io = io.BytesIO()
+    superimposed_img.save(img_io, format='PNG')
+    grad = InMemoryUploadedFile(
+        img_io, None, img_path, 'image/png', img_io.tell, charset=None)
+    gradcam = Gradcam.objects.create(
+        gradcam=grad, predictresult=predictResult, predclass=predclass)
+    gradcam.save()
 
 
 @shared_task
