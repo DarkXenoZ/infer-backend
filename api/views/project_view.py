@@ -409,16 +409,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                         pipeline=q.pipeline, image=img)
                                     predResult.predicted_class = pred
                                     predResult.save()
+                                    try:
+                                        image_path = q.image.data.name
+                                        make_gradcam.delay(
+                                            queue=q.id, predictResult=predResult.id, img_path=image_path)
+                                    except:
+                                        create_log(
+                                            user=user,
+                                            desc=f"{user.username} is unable to create Grad-CAM for image {q.image.data.name} on {q.pipeline.clara_pipeline_name} pipeline"
+                                        )
+
                             os.remove(file_path)
-                            try:
-                                image_path = q.image.data.name
-                                make_gradcam.delay(
-                                    queue=q.id, predictResult=predResult.id, img_path=image_path)
-                            except:
-                                create_log(
-                                    user=user,
-                                    desc=f"{user.username} is unable to create Grad-CAM for image {q.image.data.name} on {q.pipeline.clara_pipeline_name} pipeline"
-                                )
                             q.delete()
                         else:
                             break
