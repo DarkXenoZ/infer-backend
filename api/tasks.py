@@ -221,6 +221,8 @@ def export(project):
     # Save
     try:
         export_file = Export.objects.get(project=project)
+        old_file = export_file.zip_file.name
+        os.remove(os.path.join(media_path,old_file))
     except:
         export_file = Export()
         export_file.project = project
